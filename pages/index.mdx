@@ -1,0 +1,10 @@
+import { Layout } from "~/ui/Layout";
+import { NAME } from "~/ui/constants";
+
+Welcome
+
+export const config = {
+    unstable_runtimeJS: process.env.NODE_ENV === "development",
+};
+
+export default ({ children }) => <Layout meta={{ title: NAME }}>{children}</Layout>;
