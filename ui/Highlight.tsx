@@ -17,20 +17,20 @@ hljs.registerLanguage("html", html);
 export type Lang = "rust" | "html" | "tsx" | "ts" | "js";
 
 export function Highlight(props: PropsWithChildren<{ src: string; lang: Lang }>) {
-    let code = props.src;
+  let code = props.src;
 
-    if (props.src[0] === "\n") {
-        code = props.src.slice(1);
-    }
+  if (props.src[0] === "\n") {
+    code = props.src.slice(1);
+  }
 
-    let highlighted = hljs.highlight(props.lang, code);
+  let highlighted = hljs.highlight(props.lang, code);
 
-    return (
-        <div className="relative">
-            <code className="absolute top-2 right-2 text-sm text-gray-600">{props.lang}</code>
-            <Pre>
-                <CodeInPre src={highlighted.value} />
-            </Pre>
-        </div>
-    );
+  return (
+    <div className="relative">
+      <code className="absolute top-2 right-2 text-sm text-gray-600">{props.lang}</code>
+      <Pre>
+        <CodeInPre src={highlighted.value} />
+      </Pre>
+    </div>
+  );
 }
