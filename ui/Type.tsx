@@ -1,5 +1,6 @@
 import React, { AnchorHTMLAttributes, HTMLAttributes, PropsWithChildren } from "react";
 import Link from "next/link";
+import { BlockLabel, BlockLabelLight } from "~/ui/Highlight";
 
 export const P = (props) => <p className="my-5">{props.children}</p>;
 export const Code = (props) => (
@@ -73,7 +74,7 @@ export function LI(props: PropsWithChildren<HTMLAttributes<any>>) {
 export function DemoBlock(props: PropsWithChildren<{ label?: string }>) {
   return (
     <div className="my-6 border-2 rounded p-4 bg-white relative">
-      {props.label && <code className="absolute top-2 right-2 text-sm text-gray-600">{props.label}</code>}
+      {props.label && <BlockLabelLight>{props.label}</BlockLabelLight>}
       {props.children}
     </div>
   );
