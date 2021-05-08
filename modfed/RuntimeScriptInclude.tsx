@@ -1,8 +1,4 @@
 export function RuntimeScriptInclude(props: { html: string }) {
-  if (!process.env.BOOTSTRAP) {
-    return <div dangerouslySetInnerHTML={{ __html: `<!-- missing bootstrap -->` }} />;
-  }
-
   if (!props.html.includes("data-modfed-kind")) {
     return <div dangerouslySetInnerHTML={{ __html: `<!-- no JS components found -->` }} />;
   }

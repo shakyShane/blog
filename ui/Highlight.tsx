@@ -27,7 +27,7 @@ export function Highlight(props: PropsWithChildren<{ src: string; lang: Lang }>)
 
   return (
     <div className="relative">
-      <code className="absolute top-2 right-2 text-sm text-gray-600">{props.lang}</code>
+      <code className="text-sm absolute -top-3 md:top-2 right-3 text-gray-600 bg-atom text-code px-2 py-1 rounded">{props.lang}</code>
       <Pre>
         <CodeInPre src={highlighted.value} />
       </Pre>

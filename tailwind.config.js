@@ -6,7 +6,15 @@ module.exports = {
         "./ui/**/*.{js,ts,jsx,tsx}",
     ],
   darkMode: false, // or 'media' or 'class'
-  theme: {
+theme: {
+      colors: {
+          atom: {
+              DEFAULT: '#282c34',
+          },
+          code: {
+              DEFAULT: "#abb2bf",
+          }
+      },
     extend: {},
   },
   variants: {},
