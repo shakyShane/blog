@@ -11,8 +11,8 @@ export class Controls extends LitElement {
     }
   `;
 
-  @property()
-  pause: () => void = () => {};
+  // @property()
+  // pause: () => void = () => {};
 
   @property()
   play: () => void = () => {};
@@ -26,7 +26,6 @@ export class Controls extends LitElement {
   render() {
     return html` <div>
       <button type="submit" @click=${this.play}>Play</button>
-      <button type="submit" @click=${this.pause}>Pause</button>
       <button type="submit" @click=${this.restart}>Restart</button>
     </div>`;
   }

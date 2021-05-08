@@ -5,7 +5,9 @@ pub fn balanced(input: &str) -> bool {
             '(' => stack.push(')'),
             '[' => stack.push(']'),
             '{' => stack.push('}'),
-            ')' | ']' | '}' if stack.pop() != Some(c) => return false,
+            ')' | ']' | '}' if stack.pop() != Some(c) => {
+                return false
+            },
             _ => {}
         }
     }
