@@ -26,7 +26,14 @@ export class BalancedStack extends LitElement {
   input: string = "";
 
   @state()
-  timeline = new TimelineLite({ defaults: { duration: times.DURATION * 1.5 } });
+  timeline = new TimelineLite({
+    defaults: { duration: times.DURATION * 1.5 },
+    onComplete: function () {
+      setTimeout(() => {
+        this.restart();
+      }, 1000);
+    },
+  });
 
   firstUpdated() {
     invariant(this.pointerRowRef.value, "this.pointerRowRef.value");
@@ -67,7 +74,7 @@ export class BalancedStack extends LitElement {
       <div class="row gap">
         <div>
           <p class="prefix">Stack:</p>
-          <algo-stack ${ref(this.stackRef)}></algo-stack>
+          <algo-stack ${ref(this.stackRef)} layout="absolute"></algo-stack>
         </div>
       </div>
       <div class="row gap">

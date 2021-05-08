@@ -17,6 +17,12 @@ export class Stack extends LitElement {
       algo-cell {
         opacity: 0;
       }
+      [data-layout="absolute"] {
+        position: relative;
+      }
+      [data-layout="absolute"] algo-cell {
+        position: absolute;
+      }
     `,
   ];
 
@@ -25,6 +31,12 @@ export class Stack extends LitElement {
    */
   @property()
   stack: Item[] = [];
+
+  /**
+   * The stack to display
+   */
+  @property()
+  layout: "absolute" | "relative" = "relative";
 
   /**
    * Create a stack from an input string
@@ -37,24 +49,11 @@ export class Stack extends LitElement {
   }
 
   /**
-   * The stack to display
-   */
-  @property({ type: Boolean })
-  static: boolean = false;
-
-  /**
    * Update the underlying stack
    * @param item
    */
   push(item: Item) {
     this.stack = this.stack.concat(item);
-  }
-
-  /**
-   * Update the underlying stack
-   */
-  removeItem(id: Item["id"]) {
-    this.stack = this.stack.filter((x) => x.id === id);
   }
 
   /**
@@ -77,26 +76,10 @@ export class Stack extends LitElement {
   }
 
   /**
-   * Update the underlying cells
-   */
-  lastCell(): HTMLElement | Element | undefined {
-    const cells = this.cells();
-    if (cells.length > 0) {
-      return cells[cells.length - 1];
-    }
-    return undefined;
-  }
-
-  /**
    * Output of this component
    */
   render() {
-    if (this.static) {
-      return html` <div class="inline-array" data-elem-stack>
-        <slot></slot>
-      </div>`;
-    }
-    return html` <div class="inline-array" data-elem-stack>
+    return html`<div class="inline-array" data-layout=${this.layout}>
       ${this.stack.map((val, index) => {
         return html`<algo-cell data-id=${val.id} index=${index}>${val.char}</algo-cell>`;
       })}

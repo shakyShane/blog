@@ -45,7 +45,7 @@ export function BlockLabel(props: PropsWithChildren<any>) {
 
 export function BlockLabelLight(props: PropsWithChildren<any>) {
   return (
-    <code className="text-sm absolute border-2 -top-4 md:top-2 right-3 text-gray-600 bg-white text-code px-2 py-1 rounded">
+    <code className="text-sm absolute border-2 -top-4 md:top-3 right-3 text-gray-600 bg-white text-code px-2 py-1 rounded">
       {props.children}
     </code>
   );

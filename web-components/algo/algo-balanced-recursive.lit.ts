@@ -25,7 +25,14 @@ export class BalancedRecursive extends LitElement {
   input: string = "";
 
   @state()
-  timeline = new TimelineLite({ defaults: { duration: times.DURATION * 1.5 } });
+  timeline = new TimelineLite({
+    defaults: { duration: times.DURATION * 1.5 },
+    onComplete: function () {
+      setTimeout(() => {
+        this.restart();
+      }, 1000);
+    },
+  });
 
   firstUpdated() {
     invariant(this.pointerRowRef.value, "this.pointerRowRef.value");

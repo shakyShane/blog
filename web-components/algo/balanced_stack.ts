@@ -1,7 +1,6 @@
 import "./algo-stack.lit";
 import Stack from "./algo-stack.lit";
 import { name } from "./algo-controls.lit";
-import { balanced_stack } from "./algos/balanced_stack";
 import { bounceInputIn, Color, fadeInPointer, PointerId, showPointer, sizes, XIndex } from "./common-animations";
 import { name as pointerName, Pointer } from "./algo-pointer.lit";
 import { name as pointerRowName, PointerRow } from "./algo-pointer-row.lit";
@@ -20,81 +19,37 @@ type ResultOps = {
 };
 
 type Op =
-  | { kind: "create"; color: Color; id: PointerId; left: XIndex; right: XIndex }
-  | { kind: "append-stack"; id: string; char: string }
+  | { kind: "create"; color: Color; id: PointerId; x: XIndex }
+  | { kind: "append-stack"; id: string; char: string; index: number }
   | { kind: "pop-stack"; id: string }
-  | { kind: "move"; id: PointerId; left: XIndex; right: XIndex }
+  | { kind: "move"; id: PointerId; x: XIndex }
   | { kind: "stack-match"; inputId: PointerId; stackId: PointerId }
   | { kind: "stack-none-match"; inputId: PointerId; stackId: PointerId }
-  | { kind: "none-match"; left: PointerId; right: PointerId }
+  | { kind: "remove"; id: PointerId }
   | { kind: "result"; result: boolean };
 
-const results: Record<string, ResultOps> = {
-  "([{123}])": {
-    input: "([{123}])",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "append-stack", id: "vec-a", char: ")" },
-      { kind: "move", id: "a", left: 1, right: 1 },
-      { kind: "append-stack", id: "vec-b", char: "]" },
-      { kind: "move", id: "a", left: 2, right: 2 },
-      { kind: "append-stack", id: "vec-c", char: "}" },
-      { kind: "move", id: "a", left: 3, right: 3 },
-      { kind: "move", id: "a", left: 4, right: 4 },
-      { kind: "move", id: "a", left: 5, right: 5 },
-      { kind: "move", id: "a", left: 6, right: 6 },
-      { kind: "stack-match", inputId: "}-6", stackId: "vec-c" },
-      { kind: "pop-stack", id: "vec-c" },
-      { kind: "move", id: "a", left: 7, right: 7 },
-      { kind: "stack-match", inputId: "]-7", stackId: "vec-b" },
-      { kind: "pop-stack", id: "vec-b" },
-      { kind: "move", id: "a", left: 8, right: 8 },
-      { kind: "stack-match", inputId: ")-8", stackId: "vec-a" },
-      { kind: "pop-stack", id: "vec-a" },
-      { kind: "result", result: true },
-    ],
-  },
-  // empty
-  "12(1+2": {
-    input: "12(1+2",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "move", id: "a", left: 1, right: 1 },
-      { kind: "move", id: "a", left: 2, right: 2 },
-      { kind: "append-stack", id: "vec-a", char: ")" },
-      { kind: "move", id: "a", left: 3, right: 3 },
-      { kind: "move", id: "a", left: 4, right: 4 },
-      { kind: "move", id: "a", left: 5, right: 5 },
-      { kind: "result", result: false },
-    ],
-  },
-  // empty
-  "([})": {
-    input: "([})",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "append-stack", id: "vec-0", char: ")" },
-      { kind: "move", id: "a", left: 1, right: 1 },
-      { kind: "append-stack", id: "vec-1", char: "]" },
-      { kind: "move", id: "a", left: 2, right: 2 },
-      { kind: "stack-none-match", inputId: "}-2", stackId: "vec-1" },
-      { kind: "result", result: false },
-    ],
-  },
-};
-
 export function init(input: string, elems: Elems, timeline: TimelineLite) {
-  const res = results[input];
-  invariant(res, "not matching ops found");
-
-  const res1 = balanced_stack(input);
-  elems.RESULT.result = res1.result;
+  const ops: Op[] = [];
+  const res1 = balanced_stack_2(input, ops);
+  ops.forEach((op) => console.log("op: ", op));
+  const result: ResultOps = {
+    input,
+    ops,
+  };
+  elems.RESULT.result = res1;
   elems.RESULT.prefix = "Balanced";
 
   elems.INPUT.fromStr(input);
-  elems.POINTER_ROW.addRow({ id: "a" });
 
-  res.ops.forEach((op) => {
+  result.ops.forEach((op) => {
+    switch (op.kind) {
+      case "create": {
+        elems.POINTER_ROW.addRow({ id: op.id });
+      }
+    }
+  });
+
+  result.ops.forEach((op) => {
     switch (op.kind) {
       case "append-stack": {
         elems.STACK.push({ id: op.id, char: op.char });
@@ -105,17 +60,14 @@ export function init(input: string, elems: Elems, timeline: TimelineLite) {
   const params: BalancedStack = {
     elems,
     pointers: (id) => {
-      return {
-        left: elems.POINTER_ROW.byId(`${id}`)!,
-        right: elems.POINTER_ROW.byId(`${id}`)!,
-      };
+      return elems.POINTER_ROW.byId(id)!;
     },
     timelines: { main: timeline },
   };
 
   setTimeout(() => {
     bounceInputIn(timeline, params.elems.INPUT.cells());
-    res.ops.forEach((op) => {
+    result.ops.forEach((op) => {
       process(op, params);
     });
   }, 0);
@@ -130,7 +82,7 @@ interface Elems {
 
 interface BalancedStack {
   elems: Elems;
-  pointers: (id: string) => { left: Pointer; right: Pointer };
+  pointers: (id: string) => Pointer;
   timelines: {
     main: TimelineLite;
   };
@@ -141,18 +93,16 @@ function process(op: Op, params: BalancedStack) {
   const { STACK, INPUT } = params.elems;
   switch (op.kind) {
     case "create": {
-      const { left, right } = params.pointers(op.id);
-      main.set(left, { translateX: op.left * sizes.CELL, duration: 0 });
-      main.set(right, { translateX: op.right * sizes.CELL, duration: 0 });
-      fadeInPointer(main, left, op.color);
-      showPointer(main, right, op.color);
+      const pointer = params.pointers(op.id);
+      main.set(pointer, { translateX: op.x * sizes.CELL, duration: 0 });
+      fadeInPointer(main, pointer, op.color);
       break;
     }
     case "append-stack": {
       const stackElem = STACK.byId(op.id);
       invariant(stackElem, `missing stack elem id: ${op.id}`);
       main
-        .set(stackElem, { color: Color.black, visibility: "visible" })
+        .set(stackElem, { translateX: sizes.CELL * op.index, color: Color.black, visibility: "visible" })
         .fromTo(stackElem, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1 });
       break;
     }
@@ -163,13 +113,8 @@ function process(op: Op, params: BalancedStack) {
       break;
     }
     case "move": {
-      const { left, right } = params.pointers(op.id);
-      if (op.left === op.right) {
-        main.to([left, right], { translateX: op.left * sizes.CELL });
-      } else {
-        main.to(left, { translateX: op.left * sizes.CELL });
-        main.to(right, { translateX: op.right * sizes.CELL });
-      }
+      const pointer = params.pointers(op.id);
+      main.to(pointer, { translateX: op.x * sizes.CELL });
       break;
     }
     case "stack-match": {
@@ -186,6 +131,11 @@ function process(op: Op, params: BalancedStack) {
       main.to([inputChar, stackChar], { scale: 2, color: Color.red }).to([inputChar, stackChar], { scale: 1 });
       break;
     }
+    case "remove": {
+      const x = params.pointers(op.id);
+      main.to(x, { opacity: 0, visibility: "visible" });
+      break;
+    }
     case "result": {
       main.to(params.elems.RESULT, { opacity: 1, visibility: "visible" });
       break;
@@ -193,4 +143,57 @@ function process(op: Op, params: BalancedStack) {
     default:
       console.warn(`didn't expect to get here ${JSON.stringify(op)}`);
   }
+}
+
+export function balanced_stack_2(input: string, ops: Op[]): boolean {
+  let nextId = "a";
+  ops.push({ kind: "create", id: nextId, x: 0, color: Color.black });
+  const stackIds: string[] = [];
+  const stack: string[] = [];
+  const map = {
+    "(": ")",
+    "[": "]",
+    "{": "}",
+  };
+  let result = true;
+  loop: for (let i = 0; i < input.length; i += 1) {
+    ops.push({ kind: "move", id: nextId, x: i });
+    const char = input[i];
+    switch (char) {
+      case "(":
+      case "{":
+      case "[": {
+        stack.push(map[char]);
+        const id = `vec-${i}`;
+        stackIds.push(id);
+        ops.push({ kind: "append-stack", id: `vec-${i}`, char: map[char], index: stack.length - 1 });
+        break;
+      }
+      case ")":
+      case "]":
+      case "}": {
+        const prev = stack.pop();
+        const match = prev === char;
+        const lastId = stackIds.pop();
+        if (match) {
+          ops.push({ kind: "stack-match", inputId: `${char}-${i}`, stackId: lastId });
+          ops.push({ kind: "pop-stack", id: lastId });
+        } else {
+          ops.push({ kind: "stack-none-match", inputId: `${char}-${i}`, stackId: lastId });
+          result = false;
+          break loop;
+        }
+        break;
+      }
+      default: {
+        console.log("...");
+      }
+    }
+  }
+  const final_result = result === true && stack.length === 0;
+  if (final_result) {
+    ops.push({ kind: "remove", id: nextId });
+  }
+  ops.push({ kind: "result", result: final_result });
+  return final_result;
 }
