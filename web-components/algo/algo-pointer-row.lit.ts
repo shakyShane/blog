@@ -29,14 +29,6 @@ export class PointerRow extends LitElement {
   @state()
   rows: Row[] = [];
 
-  addRow(row: Row) {
-    this.rows = this.rows.concat(row);
-  }
-
-  removeRow(id: Row["id"]) {
-    this.rows = this.rows.filter((x) => x.id === id);
-  }
-
   pointers(): Pointer[] {
     let elems = this.shadowRoot?.querySelectorAll<Pointer>("algo-pointer");
     if (elems) {

@@ -25,6 +25,7 @@ export class Result extends LitElement {
    * Output of this component
    */
   render() {
+    if (this.result === null) return;
     return html`<p class="result">${this.prefix}: ${this.result}</p>`;
   }
 }

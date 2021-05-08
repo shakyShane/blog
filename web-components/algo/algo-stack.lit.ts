@@ -26,9 +26,9 @@ export class Stack extends LitElement {
     `,
   ];
 
-  /**
-   * The stack to display
-   */
+  @property({ type: String })
+  input: string = "";
+
   @property()
   stack: Item[] = [];
 
@@ -37,24 +37,6 @@ export class Stack extends LitElement {
    */
   @property()
   layout: "absolute" | "relative" = "relative";
-
-  /**
-   * Create a stack from an input string
-   * @param input
-   */
-  fromStr(input: string) {
-    this.stack = input.split("").map((x, index) => {
-      return { id: `${x}-${index}`, char: x };
-    });
-  }
-
-  /**
-   * Update the underlying stack
-   * @param item
-   */
-  push(item: Item) {
-    this.stack = this.stack.concat(item);
-  }
 
   /**
    * Update the underlying cells

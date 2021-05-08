@@ -13,6 +13,7 @@ console.log("register %O", pointerRowName);
 console.log("register %O", resultName);
 
 type ResultOps = {
+  result: boolean;
   input: string;
   ops: Op[];
 };
@@ -84,19 +85,20 @@ export function init(input: string, elements: Elems, timeline: TimelineLite) {
   const res: ResultOps = {
     input: input,
     ops: ops,
+    result: res2_result,
   };
+  //
+  // elements.RESULT.prefix = "Balanced";
+  // elements.RESULT.result = res2_result;
+  // elements.INPUT.fromStr(input);
 
-  elements.RESULT.prefix = "Balanced";
-  elements.RESULT.result = res2_result;
-  elements.INPUT.fromStr(input);
-
-  res.ops.forEach((op) => {
-    switch (op.kind) {
-      case "create": {
-        elements.POINTER_ROW.addRow({ id: op.id });
-      }
-    }
-  });
+  // res.ops.forEach((op) => {
+  //   switch (op.kind) {
+  //     case "create": {
+  //       elements.POINTER_ROW.addRow({ id: op.id });
+  //     }
+  //   }
+  // });
 
   setTimeout(() => {
     const params: BalancedStack = {

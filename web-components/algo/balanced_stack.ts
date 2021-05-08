@@ -7,18 +7,14 @@ import { name as pointerRowName, PointerRow } from "./algo-pointer-row.lit";
 import { name as resultName, Result } from "./algo-result.lit";
 import invariant from "tiny-invariant";
 import { TimelineLite } from "gsap/gsap-core";
+import { ResultOps } from "~/web-components/algo/algo-balanced-stack.lit";
 
 console.log("register %O", name);
 console.log("register %O", pointerName);
 console.log("register %O", pointerRowName);
 console.log("register %O", resultName);
 
-type ResultOps = {
-  input: string;
-  ops: Op[];
-};
-
-type Op =
+export type Op =
   | { kind: "create"; color: Color; id: PointerId; x: XIndex }
   | { kind: "append-stack"; id: string; char: string; index: number }
   | { kind: "pop-stack"; id: string }
@@ -28,35 +24,7 @@ type Op =
   | { kind: "remove"; id: PointerId }
   | { kind: "result"; result: boolean };
 
-export function init(input: string, elems: Elems, timeline: TimelineLite) {
-  const ops: Op[] = [];
-  const res1 = balanced_stack_2(input, ops);
-  ops.forEach((op) => console.log("op: ", op));
-  const result: ResultOps = {
-    input,
-    ops,
-  };
-  elems.RESULT.result = res1;
-  elems.RESULT.prefix = "Balanced";
-
-  elems.INPUT.fromStr(input);
-
-  result.ops.forEach((op) => {
-    switch (op.kind) {
-      case "create": {
-        elems.POINTER_ROW.addRow({ id: op.id });
-      }
-    }
-  });
-
-  result.ops.forEach((op) => {
-    switch (op.kind) {
-      case "append-stack": {
-        elems.STACK.push({ id: op.id, char: op.char });
-      }
-    }
-  });
-
+export function init(resultOps: ResultOps, elems: Elems, timeline: TimelineLite) {
   const params: BalancedStack = {
     elems,
     pointers: (id) => {
@@ -67,7 +35,7 @@ export function init(input: string, elems: Elems, timeline: TimelineLite) {
 
   setTimeout(() => {
     bounceInputIn(timeline, params.elems.INPUT.cells());
-    result.ops.forEach((op) => {
+    resultOps.ops.forEach((op) => {
       process(op, params);
     });
   }, 0);
