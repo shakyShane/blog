@@ -1,5 +1,5 @@
 import "tailwindcss/tailwind.css";
-import "../styles/highlight.css";
+import "highlight.js/styles/atom-one-dark.css";
 import "../styles/svg.css";
 import { Nav } from "~/ui/Nav";
 import { Footer } from "~/ui/Footer";

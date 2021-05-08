@@ -7,6 +7,7 @@ import { name as pointerName, Pointer } from "./algo-pointer.lit";
 import { name as pointerRowName, PointerRow } from "./algo-pointer-row.lit";
 import { name as resultName, Result } from "./algo-result.lit";
 import invariant from "tiny-invariant";
+import { TimelineLite } from "gsap/gsap-core";
 
 console.log("register %O", name);
 console.log("register %O", pointerName);
@@ -57,7 +58,7 @@ const results: Record<string, ResultOps> = {
   "12(1+2": {
     input: "12(1+2",
     ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.white },
+      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
       { kind: "move", id: "a", left: 1, right: 1 },
       { kind: "move", id: "a", left: 2, right: 2 },
       { kind: "append-stack", id: "vec-a", char: ")" },
@@ -71,7 +72,7 @@ const results: Record<string, ResultOps> = {
   "([})": {
     input: "([})",
     ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.white },
+      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
       { kind: "append-stack", id: "vec-0", char: ")" },
       { kind: "move", id: "a", left: 1, right: 1 },
       { kind: "append-stack", id: "vec-1", char: "]" },
@@ -82,7 +83,7 @@ const results: Record<string, ResultOps> = {
   },
 };
 
-export function init(input: string, elems: Elems, timeline: gsap.core.Timeline) {
+export function init(input: string, elems: Elems, timeline: TimelineLite) {
   const res = results[input];
   invariant(res, "not matching ops found");
 
@@ -131,7 +132,7 @@ interface BalancedStack {
   elems: Elems;
   pointers: (id: string) => { left: Pointer; right: Pointer };
   timelines: {
-    main: gsap.core.Timeline;
+    main: TimelineLite;
   };
 }
 

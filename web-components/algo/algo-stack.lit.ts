@@ -13,7 +13,6 @@ export class Stack extends LitElement {
       .inline-array {
         width: 100%;
         display: flex;
-        justify-content: flex-end;
       }
       algo-cell {
         opacity: 0;

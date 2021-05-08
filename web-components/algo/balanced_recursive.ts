@@ -6,6 +6,7 @@ import { name as pointerRowName, PointerRow } from "./algo-pointer-row.lit";
 import { name as resultName, Result } from "./algo-result.lit";
 import { bounceInputIn, Color, fadeInPointer, PointerId, showPointer, sizes, XIndex } from "./common-animations";
 import { balanced_recursive } from "./algos/balanced_recursive";
+import { TimelineLite } from "gsap/gsap-core";
 
 console.log("register %O", name);
 console.log("register %O", pointerName);
@@ -30,7 +31,7 @@ const results: Record<string, ResultOps> = {
   "3()[]": {
     input: "3()[]",
     ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.white },
+      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
       { kind: "move", id: "a", left: 1, right: 1 },
       { kind: "create", id: "b", left: 2, right: 2, color: Color.pink },
       { kind: "match", left: "a", right: "b" },
@@ -45,7 +46,7 @@ const results: Record<string, ResultOps> = {
   "3(000)[]": {
     input: "3(000)[]",
     ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.white },
+      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
       { kind: "move", id: "a", left: 1, right: 1 },
       { kind: "create", id: "b", left: 2, right: 2, color: Color.pink },
       { kind: "move", id: "b", left: 3, right: 3 },
@@ -63,7 +64,7 @@ const results: Record<string, ResultOps> = {
   "(1+2)": {
     input: "(1+2)",
     ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.white },
+      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
       { kind: "create", id: "b", left: 0, right: 0, color: Color.orange },
       { kind: "move", id: "b", left: 1, right: 1 },
       { kind: "move", id: "b", left: 2, right: 2 },
@@ -77,7 +78,7 @@ const results: Record<string, ResultOps> = {
   "12(1+2": {
     input: "12(1+2",
     ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.white },
+      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
       { kind: "move", id: "a", left: 1, right: 1 },
       { kind: "move", id: "a", left: 2, right: 2 },
       { kind: "create", id: "b", left: 3, right: 3, color: Color.pink },
@@ -91,7 +92,7 @@ const results: Record<string, ResultOps> = {
   "~([{}])~": {
     input: "~([{}])~",
     ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.white },
+      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
       { kind: "move", id: "a", left: 1, right: 1 },
       { kind: "create", id: "b", left: 2, right: 2, color: Color.pink },
       { kind: "create", id: "c", left: 3, right: 3, color: Color.orange },
@@ -191,7 +192,7 @@ function process(op: Op, params: BalancedStack) {
   }
 }
 
-export function init(input: string, elements: Elems, timeline: gsap.core.Timeline) {
+export function init(input: string, elements: Elems, timeline: TimelineLite) {
   const res = results[input];
   if (!res) throw new Error("input not found");
 
@@ -238,6 +239,6 @@ interface BalancedStack {
   elems: Elems;
   pointers: (id: string) => { left: Pointer; right: Pointer };
   timelines: {
-    main: gsap.core.Timeline;
+    main: TimelineLite;
   };
 }

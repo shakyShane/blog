@@ -4,10 +4,27 @@ type LoaderProps = {
   kind?: "vanilla" | "preact";
   mdxType?: string;
   originalType?: any;
+  scriptInclude?: string | string[];
 };
 
 export function BrowserComponent(props: PropsWithChildren<LoaderProps>) {
-  const { kind = "preact" } = props;
+  const { kind = "preact", scriptInclude } = props;
+  if (kind === "vanilla" && scriptInclude) {
+    console.log(scriptInclude);
+    return (
+      <>
+        <script
+          type={"text/json"}
+          data-modfed-kind={kind}
+          data-modfed-data
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({ scriptInclude: [].concat(scriptInclude) }).replace(/</g, "\\u003c"),
+          }}
+        />
+        {props.children}
+      </>
+    );
+  }
   return Children.map(props.children, (child) => {
     if (!React.isValidElement(child)) {
       throw new Error("cannot work with none-valid child");

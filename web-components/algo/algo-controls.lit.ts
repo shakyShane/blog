@@ -6,10 +6,8 @@ export class Controls extends LitElement {
   static styles = css`
     :host {
       display: flex;
-      justify-content: center;
     }
     button {
-      outline: 1px solid green;
     }
   `;
 

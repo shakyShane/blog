@@ -70,8 +70,13 @@ export function LI(props: PropsWithChildren<HTMLAttributes<any>>) {
   );
 }
 
-export function DemoBlock(props: PropsWithChildren<any>) {
-  return <div className="my-6 border-4 border-purple-500 p-4">{props.children}</div>;
+export function DemoBlock(props: PropsWithChildren<{ label?: string }>) {
+  return (
+    <div className="my-6 border-2 rounded p-4 bg-white relative">
+      {props.label && <code className="absolute top-2 right-2 text-sm text-gray-600">{props.label}</code>}
+      {props.children}
+    </div>
+  );
 }
 
 export function HomeLink() {

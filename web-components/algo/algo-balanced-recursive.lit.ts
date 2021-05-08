@@ -25,7 +25,7 @@ export class BalancedRecursive extends LitElement {
   input: string = "";
 
   @state()
-  timeline = new TimelineLite({ defaults: { duration: times.DURATION * 2 } });
+  timeline = new TimelineLite({ defaults: { duration: times.DURATION * 1.5 } });
 
   firstUpdated() {
     invariant(this.pointerRowRef.value, "this.pointerRowRef.value");
@@ -54,7 +54,7 @@ export class BalancedRecursive extends LitElement {
       <algo-controls .pause=${this.pause} .play=${this.play} .restart=${this.restart}></algo-controls>
       <div class="row">
         <div>
-          <span class="prefix">Input:</span>
+          <p class="prefix">Input:</p>
           <div class="row-height">
             <algo-pointer-row ${ref(this.pointerRowRef)}></algo-pointer-row>
           </div>
