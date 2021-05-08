@@ -5,7 +5,6 @@ import { name as pointerName, Pointer } from "./algo-pointer.lit";
 import { name as pointerRowName, PointerRow } from "./algo-pointer-row.lit";
 import { name as resultName, Result } from "./algo-result.lit";
 import { bounceInputIn, Color, fadeInPointer, PointerId, showPointer, sizes, XIndex } from "./common-animations";
-import { balanced_recursive } from "./algos/balanced_recursive";
 import { TimelineLite } from "gsap/gsap-core";
 
 console.log("register %O", name);
@@ -19,7 +18,7 @@ type ResultOps = {
 };
 
 type Op =
-  | { kind: "create"; color: Color; id: PointerId; left: XIndex; right: XIndex }
+  | { kind: "create"; color: Color; id: PointerId; x: XIndex }
   | { kind: "move"; id: PointerId; left: XIndex; right: XIndex }
   | { kind: "match"; left: PointerId; right: PointerId }
   | { kind: "none-match"; left: PointerId; right: PointerId }
@@ -27,158 +26,44 @@ type Op =
   | { kind: "remove-many"; ids: PointerId[] }
   | { kind: "result"; result: boolean };
 
-const results: Record<string, ResultOps> = {
-  "3()[]": {
-    input: "3()[]",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "move", id: "a", left: 1, right: 1 },
-      { kind: "create", id: "b", left: 2, right: 2, color: Color.pink },
-      { kind: "match", left: "a", right: "b" },
-      { kind: "remove", id: "b" },
-      { kind: "move", id: "a", left: 3, right: 3 },
-      { kind: "create", id: "c", left: 4, right: 4, color: Color.yellow },
-      { kind: "match", left: "a", right: "c" },
-      { kind: "remove", id: "c" },
-      { kind: "remove", id: "a" },
-    ],
-  },
-  "3(000)[]": {
-    input: "3(000)[]",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "move", id: "a", left: 1, right: 1 },
-      { kind: "create", id: "b", left: 2, right: 2, color: Color.pink },
-      { kind: "move", id: "b", left: 3, right: 3 },
-      { kind: "move", id: "b", left: 4, right: 4 },
-      { kind: "move", id: "b", left: 5, right: 5 },
-      { kind: "match", left: "a", right: "b" },
-      { kind: "remove", id: "b" },
-      { kind: "move", id: "a", left: 6, right: 6 },
-      { kind: "create", id: "c", left: 7, right: 7, color: Color.orange },
-      { kind: "match", left: "a", right: "c" },
-      { kind: "remove-many", ids: ["a", "c"] },
-      { kind: "result", result: true },
-    ],
-  },
-  "(1+2)": {
-    input: "(1+2)",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "create", id: "b", left: 0, right: 0, color: Color.orange },
-      { kind: "move", id: "b", left: 1, right: 1 },
-      { kind: "move", id: "b", left: 2, right: 2 },
-      { kind: "move", id: "b", left: 3, right: 3 },
-      { kind: "move", id: "b", left: 4, right: 4 },
-      { kind: "match", left: "a", right: "b" },
-      { kind: "remove-many", ids: ["a", "b"] },
-      { kind: "result", result: true },
-    ],
-  },
-  "12(1+2": {
-    input: "12(1+2",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "move", id: "a", left: 1, right: 1 },
-      { kind: "move", id: "a", left: 2, right: 2 },
-      { kind: "create", id: "b", left: 3, right: 3, color: Color.pink },
-      { kind: "move", id: "b", left: 4, right: 4 },
-      { kind: "move", id: "b", left: 5, right: 5 },
-      { kind: "none-match", left: "a", right: "b" },
-      { kind: "remove-many", ids: ["a", "b"] },
-      { kind: "result", result: false },
-    ],
-  },
-  "~([{}])~": {
-    input: "~([{}])~",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "move", id: "a", left: 1, right: 1 },
-      { kind: "create", id: "b", left: 2, right: 2, color: Color.pink },
-      { kind: "create", id: "c", left: 3, right: 3, color: Color.orange },
-      { kind: "create", id: "d", left: 4, right: 4, color: Color.lightgreen },
-      { kind: "match", left: "c", right: "d" },
-      { kind: "remove", id: "d" },
-      { kind: "move", id: "c", left: 5, right: 5 },
-      { kind: "match", left: "b", right: "c" },
-      { kind: "remove", id: "c" },
-      { kind: "move", id: "b", left: 6, right: 6 },
-      { kind: "match", left: "a", right: "b" },
-      { kind: "remove", id: "b" },
-      { kind: "move", id: "a", left: 7, right: 7 },
-      { kind: "remove", id: "a" },
-      { kind: "result", result: true },
-    ],
-  },
-  "([{123}])": {
-    input: "([{123}])",
-    ops: [
-      { kind: "create", id: "a", left: 0, right: 0, color: Color.black },
-      { kind: "create", id: "b", left: 1, right: 1, color: Color.red },
-      { kind: "create", id: "c", left: 2, right: 2, color: Color.orange },
-      { kind: "create", id: "d", left: 3, right: 3, color: Color.lightgreen },
-      { kind: "move", id: "d", left: 4, right: 4 },
-      { kind: "move", id: "d", left: 5, right: 5 },
-      { kind: "move", id: "d", left: 6, right: 6 },
-      { kind: "match", left: "c", right: "d" },
-      { kind: "remove", id: "d" },
-      { kind: "move", id: "c", left: 7, right: 7 },
-      { kind: "match", left: "b", right: "c" },
-      { kind: "remove", id: "c" },
-      { kind: "move", id: "b", left: 8, right: 8 },
-      { kind: "match", left: "a", right: "b" },
-      { kind: "remove-many", ids: ["a", "b"] },
-      { kind: "result", result: true },
-    ],
-  },
-};
-
 function process(op: Op, params: BalancedStack) {
   const { main } = params.timelines;
   switch (op.kind) {
     case "create": {
-      const { left, right } = params.pointers(op.id);
-      main.set(left, { translateX: op.left * sizes.CELL, duration: 0 });
-      main.set(right, { translateX: op.right * sizes.CELL, duration: 0 });
-      fadeInPointer(main, left, op.color);
-      showPointer(main, right, op.color);
+      const x = params.pointers(op.id);
+      main.set(x, { translateX: op.x * sizes.CELL, duration: 0 });
+      fadeInPointer(main, x, op.color);
       break;
     }
     case "move": {
-      const { left, right } = params.pointers(op.id);
-      if (op.left === op.right) {
-        main.to([left, right], { translateX: op.left * sizes.CELL });
-      } else {
-        main.to(left, { translateX: op.left * sizes.CELL });
-        main.to(right, { translateX: op.right * sizes.CELL });
-      }
+      const x = params.pointers(op.id);
+      main.to(x, { translateX: op.left * sizes.CELL });
       break;
     }
     case "match": {
-      const { left, right } = params.pointers(op.left);
-      const { left: rleft, right: rright } = params.pointers(op.right);
-      main.to([left, right, rleft, rright], { scale: 1.5 });
-      main.to([left, right, rleft, rright], { scale: 1 });
+      const x = params.pointers(op.left);
+      const xr = params.pointers(op.right);
+      main.to([x, xr], { scale: 1.5 });
+      main.to([x, xr], { scale: 1 });
       break;
     }
     case "none-match": {
-      const { left, right } = params.pointers(op.left);
-      const { left: rleft, right: rright } = params.pointers(op.right);
-      main.to([left, right, rleft, rright], { scale: 1.5, color: Color.red });
-      main.to([left, right, rleft, rright], { scale: 1 });
+      const x = params.pointers(op.left);
+      const xr = params.pointers(op.right);
+      main.to([x, xr], { scale: 1.5, color: Color.red });
+      main.to([x, xr], { scale: 1 });
       break;
     }
     case "remove": {
-      const { left, right } = params.pointers(op.id);
-      main.to([left, right], { opacity: 0, visibility: "visible" });
+      const x = params.pointers(op.id);
+      main.to(x, { opacity: 0, visibility: "visible" });
       break;
     }
     case "remove-many": {
       const elems: any[] = [];
       op.ids.forEach((id) => {
-        const { left, right } = params.pointers(id);
-        elems.push(left);
-        elems.push(right!);
+        const x = params.pointers(id);
+        elems.push(x);
       });
       main.to(elems, { opacity: 0, visibility: "visible" });
       break;
@@ -193,20 +78,22 @@ function process(op: Op, params: BalancedStack) {
 }
 
 export function init(input: string, elements: Elems, timeline: TimelineLite) {
-  const res = results[input];
-  if (!res) throw new Error("input not found");
+  const ops: Op[] = [];
+  const res2_result = balanced_recursive_2(input, ops);
 
-  const res1 = balanced_recursive(input);
+  const res: ResultOps = {
+    input: input,
+    ops: ops,
+  };
 
   elements.RESULT.prefix = "Balanced";
-  elements.RESULT.result = res1;
+  elements.RESULT.result = res2_result;
   elements.INPUT.fromStr(input);
 
   res.ops.forEach((op) => {
     switch (op.kind) {
       case "create": {
-        elements.POINTER_ROW.addRow({ id: `${op.id}-left` });
-        elements.POINTER_ROW.addRow({ id: `${op.id}-right` });
+        elements.POINTER_ROW.addRow({ id: op.id });
       }
     }
   });
@@ -215,10 +102,7 @@ export function init(input: string, elements: Elems, timeline: TimelineLite) {
     const params: BalancedStack = {
       elems: elements,
       pointers: (id) => {
-        return {
-          left: elements.POINTER_ROW.byId(`${id}-left`)!,
-          right: elements.POINTER_ROW.byId(`${id}-right`)!,
-        };
+        return elements.POINTER_ROW.byId(id);
       },
       timelines: { main: timeline },
     };
@@ -237,8 +121,104 @@ interface Elems {
 
 interface BalancedStack {
   elems: Elems;
-  pointers: (id: string) => { left: Pointer; right: Pointer };
+  pointers: (id: string) => Pointer;
   timelines: {
     main: TimelineLite;
   };
+}
+
+const mapping = {
+  "(": ")",
+  "[": "]",
+  "{": "}",
+};
+
+/**
+ * @param {string} slice
+ * @param {Op[]} ops
+ * @returns {boolean}
+ */
+export function balanced_recursive_2(slice: string, ops: Op[]): boolean {
+  const colors = {
+    "0": Color.black,
+    "1": Color.purple,
+    "2": Color.orange,
+    "3": Color.lightgreen,
+  };
+  const pointers: string[] = [];
+  const cursor = { index: 0, max: slice.length };
+  const res_bool = expect(null, slice.split(""), cursor, 0, ops);
+  ops.push({ kind: "result", result: res_bool });
+  /**
+   * @param {string|null} end
+   * @param {string[]} chars
+   * @param cursor
+   * @param {number} callCursor
+   * @param {Op[]} ops
+   * @param prevId
+   * @returns {boolean}
+   */
+  function expect(
+    end,
+    chars,
+    cursor: { index: number; max: number },
+    callCursor: number,
+    ops: Op[],
+    prevId?: string
+  ): boolean {
+    const nextId = `pid-${pointers.length}`;
+    const nextColor = colors[String(pointers.length)] || colors[0];
+    pointers.push(nextId);
+    ops.push({
+      kind: "create",
+      id: nextId,
+      color: nextColor,
+      x: cursor.index,
+    });
+
+    while (true) {
+      let c = chars.shift();
+      cursor.index += 1;
+      // console.log("Equal: char='%O', index=%O, loop=%d", c, callIndex, loopIndex + callIndex);
+      if (c === undefined) c = null; // just here to allow JSON
+      let good;
+      switch (c) {
+        case "(":
+        case "{":
+        case "[": {
+          good = expect(mapping[c], chars, cursor, callCursor, ops, nextId);
+          break;
+        }
+        case null:
+        case ")":
+        case "}":
+        case "]": {
+          const res = end === c;
+          if (end && c) {
+            if (res) {
+              ops.push({ kind: "match", left: prevId, right: nextId });
+              ops.push({ kind: "remove", id: nextId });
+            } else {
+              ops.push({ kind: "none-match", left: prevId, right: nextId });
+            }
+          }
+          return res;
+        }
+        default: {
+          good = true; // any other char
+        }
+      }
+      if (!good) {
+        return false;
+      } else {
+        if (cursor.index < cursor.max) {
+          ops.push({ kind: "move", id: nextId, left: cursor.index, right: cursor.index });
+        } else {
+          ops.push({ kind: "remove", id: nextId });
+        }
+      }
+    }
+  }
+
+  return res_bool;
 }

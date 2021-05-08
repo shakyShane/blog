@@ -6,10 +6,10 @@ export type XIndex = number;
 export enum Color {
   red = "red",
   orange = "orange",
-  yellow = "yellow",
   pink = "pink",
   lightgreen = "lightgreen",
   black = "black",
+  purple = "purple",
 }
 
 export const colors = {
