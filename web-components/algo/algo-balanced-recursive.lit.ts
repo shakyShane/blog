@@ -19,7 +19,7 @@ console.log(inputsName);
 
 @customElement("algo-balanced-recursive")
 export class BalancedRecursive extends LitElement {
-  private timeline = new TimelineController(this, 1000);
+  private timeline = new TimelineController(this);
 
   static styles = [layout];
 

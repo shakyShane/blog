@@ -6,17 +6,19 @@ export class TimelineController implements ReactiveController {
   host: ReactiveControllerHost;
   timeline: TimelineLite;
 
-  constructor(host: ReactiveControllerHost, timeout = 1000) {
+  constructor(host: ReactiveControllerHost) {
     (this.host = host).addController(this);
     this.timeline = new TimelineLite({
       defaults: { duration: times.DURATION * 1.5 },
       onComplete: function () {
-        setTimeout(() => {
-          this.restart();
-        }, timeout);
+        this.restart();
       },
     });
   }
+  hostUpdated() {
+    console.log("host updated");
+  }
+
   hostDisconnected() {
     this.timeline.clear();
   }

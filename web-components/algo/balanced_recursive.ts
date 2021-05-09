@@ -25,6 +25,7 @@ export type Op =
   | { kind: "none-match"; left: PointerId; right: PointerId }
   | { kind: "remove"; id: PointerId }
   | { kind: "remove-many"; ids: PointerId[] }
+  | { kind: "highlight-pointer"; id: PointerId }
   | { kind: "result"; result: boolean };
 
 function process(op: Op, params: BalancedStack) {
@@ -69,8 +70,13 @@ function process(op: Op, params: BalancedStack) {
       main.to(elems, { opacity: 0, visibility: "visible" });
       break;
     }
+    case "highlight-pointer": {
+      const x = params.pointers(op.id);
+      main.to(x, { scale: 1.5, color: Color.red });
+      break;
+    }
     case "result": {
-      main.to(params.elems.RESULT, { opacity: 1, visibility: "visible" });
+      main.to(params.elems.RESULT, { delay: 1 });
       break;
     }
     default:
@@ -145,12 +151,12 @@ export function balanced_recursive_2(slice: string, ops: Op[]): boolean {
     ops: Op[],
     prevId?: string
   ): boolean {
-    const nextId = `pid-${pointers.length}`;
+    const nextPointerId = `pid-${pointers.length}`;
     const nextColor = colors[String(pointers.length)] || colors[0];
-    pointers.push(nextId);
+    pointers.push(nextPointerId);
     ops.push({
       kind: "create",
-      id: nextId,
+      id: nextPointerId,
       color: nextColor,
       x: cursor.index,
     });
@@ -165,7 +171,7 @@ export function balanced_recursive_2(slice: string, ops: Op[]): boolean {
         case "(":
         case "{":
         case "[": {
-          good = expect(mapping[c], chars, cursor, callCursor, ops, nextId);
+          good = expect(mapping[c], chars, cursor, callCursor, ops, nextPointerId);
           break;
         }
         case null:
@@ -175,11 +181,14 @@ export function balanced_recursive_2(slice: string, ops: Op[]): boolean {
           const res = end === c;
           if (end && c) {
             if (res) {
-              ops.push({ kind: "match", left: prevId, right: nextId });
-              ops.push({ kind: "remove", id: nextId });
+              ops.push({ kind: "match", left: prevId, right: nextPointerId });
+              ops.push({ kind: "remove", id: nextPointerId });
             } else {
-              ops.push({ kind: "none-match", left: prevId, right: nextId });
+              ops.push({ kind: "none-match", left: prevId, right: nextPointerId });
             }
+          } else if (c && !end) {
+            ops.push({ kind: "highlight-pointer", id: nextPointerId });
+            console.log({ end, c });
           }
           return res;
         }
@@ -191,9 +200,9 @@ export function balanced_recursive_2(slice: string, ops: Op[]): boolean {
         return false;
       } else {
         if (cursor.index < cursor.max) {
-          ops.push({ kind: "move", id: nextId, left: cursor.index, right: cursor.index });
+          ops.push({ kind: "move", id: nextPointerId, left: cursor.index, right: cursor.index });
         } else {
-          ops.push({ kind: "remove", id: nextId });
+          ops.push({ kind: "remove", id: nextPointerId });
         }
       }
     }

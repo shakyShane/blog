@@ -6,7 +6,7 @@ import { name as pointerName, Pointer } from "./algo-pointer.lit";
 import { name as pointerRowName, PointerRow } from "./algo-pointer-row.lit";
 import { name as resultName, Result } from "./algo-result.lit";
 import invariant from "tiny-invariant";
-import { TimelineLite } from "gsap/gsap-core";
+import { TimelineLite } from "gsap";
 import { ResultOps } from "~/web-components/algo/algo-balanced-stack.lit";
 
 console.log("register %O", name);
@@ -71,7 +71,7 @@ function process(op: Op, params: BalancedStack) {
       invariant(stackElem, `missing stack elem id: ${op.id}`);
       main
         .set(stackElem, { translateX: sizes.CELL * op.index, color: Color.black, visibility: "visible" })
-        .fromTo(stackElem, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1 });
+        .fromTo(stackElem, { opacity: 0, scale: 2 }, { opacity: 1, scale: 1 });
       break;
     }
     case "pop-stack": {
@@ -109,7 +109,7 @@ function process(op: Op, params: BalancedStack) {
       break;
     }
     case "result": {
-      // main.to(params.elems.RESULT, { opacity: 1, visibility: "visible" });
+      main.to(params.elems.RESULT, { delay: 1 });
       break;
     }
     case "highlight-stack": {
@@ -175,7 +175,10 @@ export function balanced_stack_2(input: string, ops: Op[]): boolean {
     ops.push({ kind: "remove", id: nextId });
   } else {
     if (stack.length !== 0) {
-      ops.push({ kind: "highlight-stack" });
+      const lastOp = ops[ops.length - 1];
+      if (lastOp.kind !== "stack-none-match") {
+        ops.push({ kind: "highlight-stack" });
+      }
     }
   }
   ops.push({ kind: "result", result: final_result });
