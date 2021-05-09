@@ -1,6 +1,7 @@
 import { Layout } from "~/ui/Layout";
 import { BrowserComponent } from "~/modfed/BrowserComponent";
-import { Highlight } from "~/ui/Highlight"; import {DemoBlock} from "../../ui/Type";
+import { Highlight } from "~/ui/Highlight";
+import { DemoBlock } from "../../ui/Type";
 
 This is a test post for the new blog, and I'm enjoying it
 
@@ -12,16 +13,20 @@ Whilst this is easier to reason about, it requires the extra data structure
 to do the book-keeping
 
 <DemoBlock label="visualization">
-    <BrowserComponent kind="vanilla" scriptInclude="algo/algo-balanced-stack.lit.ts">
-        <algo-balanced-stack input="((9+1))" />
-    </BrowserComponent>
+  <BrowserComponent kind="vanilla" scriptInclude="algo/algo-balanced-stack.lit.ts">
+    <algo-balanced-stack input="((9+1))" />
+  </BrowserComponent>
 </DemoBlock>
 
 ## Recursive solution
 
 This is done in a single pass using recursion
 
-
+<DemoBlock label="visualization">
+  <BrowserComponent kind="vanilla" scriptInclude="algo/algo-balanced-recursive.lit.ts">
+    <algo-balanced-recursive input="{[]}" />
+  </BrowserComponent>
+</DemoBlock>
 
 export const config = {
   unstable_runtimeJS: false,

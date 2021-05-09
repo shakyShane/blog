@@ -4,13 +4,12 @@ import { html, LitElement } from "lit";
 import invariant from "tiny-invariant";
 import Stack, { StackItem } from "./algo-stack.lit";
 import { Result } from "./algo-result.lit";
-import { AlgoInput, name as inputName } from "./algo-input.lit";
+import { name as inputName } from "./algo-input.lit";
 import { balanced_stack_2, initAnimations, Op } from "./balanced_stack";
 import { PointerRow, Row } from "./algo-pointer-row.lit";
-import { times } from "./common-animations";
 import { layout } from "./common-styles.lit";
-import { TimelineLite } from "gsap";
 import { CSSPlugin } from "gsap/CSSPlugin";
+import { TimelineController } from "./controllers/timeline.controller";
 
 const plugins = [CSSPlugin];
 
@@ -24,22 +23,14 @@ export type ResultOps = {
 
 @customElement("algo-balanced-stack")
 export class BalancedStack extends LitElement {
+  private timeline = new TimelineController(this, 1000);
+
   static styles = [layout];
 
   constructor() {
     super();
     this.derivedState(this.getAttribute("input"));
   }
-
-  @state()
-  timeline = new TimelineLite({
-    defaults: { duration: times.DURATION * 1.5 },
-    onComplete: function () {
-      setTimeout(() => {
-        this.restart();
-      }, 1000);
-    },
-  });
 
   pointerRowRef = createRef<PointerRow>();
   inputRef = createRef<Stack>();
@@ -110,7 +101,7 @@ export class BalancedStack extends LitElement {
    */
   firstUpdated() {
     this.startAnimation().catch((e) => {
-      console.error("Could not init from `firstUpdated`");
+      console.error("Could not init from `firstUpdated`", e);
     });
   }
 
@@ -128,7 +119,7 @@ export class BalancedStack extends LitElement {
         RESULT: this.resultRef.value,
         STACK: this.stackRef.value,
       },
-      this.timeline
+      this.timeline.timeline
     );
   }
 
@@ -137,7 +128,7 @@ export class BalancedStack extends LitElement {
    * @param input
    */
   setInput = (input: string) => {
-    this.timeline.clear();
+    this.timeline.timeline.clear();
     this.input = input;
     this.derivedState(this.input);
     this.startAnimation().catch((e) => {

@@ -12,13 +12,13 @@ console.log("register %O", pointerName);
 console.log("register %O", pointerRowName);
 console.log("register %O", resultName);
 
-type ResultOps = {
+export type ResultOps = {
   result: boolean;
   input: string;
   ops: Op[];
 };
 
-type Op =
+export type Op =
   | { kind: "create"; color: Color; id: PointerId; x: XIndex }
   | { kind: "move"; id: PointerId; left: XIndex; right: XIndex }
   | { kind: "match"; left: PointerId; right: PointerId }
@@ -78,41 +78,18 @@ function process(op: Op, params: BalancedStack) {
   }
 }
 
-export function init(input: string, elements: Elems, timeline: TimelineLite) {
-  const ops: Op[] = [];
-  const res2_result = balanced_recursive_2(input, ops);
-
-  const res: ResultOps = {
-    input: input,
-    ops: ops,
-    result: res2_result,
+export function init(res: ResultOps, elements: Elems, timeline: TimelineLite) {
+  const params: BalancedStack = {
+    elems: elements,
+    pointers: (id) => {
+      return elements.POINTER_ROW.byId(id);
+    },
+    timelines: { main: timeline },
   };
-  //
-  // elements.RESULT.prefix = "Balanced";
-  // elements.RESULT.result = res2_result;
-  // elements.INPUT.fromStr(input);
-
-  // res.ops.forEach((op) => {
-  //   switch (op.kind) {
-  //     case "create": {
-  //       elements.POINTER_ROW.addRow({ id: op.id });
-  //     }
-  //   }
-  // });
-
-  setTimeout(() => {
-    const params: BalancedStack = {
-      elems: elements,
-      pointers: (id) => {
-        return elements.POINTER_ROW.byId(id);
-      },
-      timelines: { main: timeline },
-    };
-    bounceInputIn(timeline, params.elems.INPUT.cells());
-    res.ops.forEach((op) => {
-      process(op, params);
-    });
-  }, 0);
+  bounceInputIn(timeline, params.elems.INPUT.cells());
+  res.ops.forEach((op) => {
+    process(op, params);
+  });
 }
 
 interface Elems {

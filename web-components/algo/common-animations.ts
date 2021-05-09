@@ -1,5 +1,4 @@
-import { TimelineLite } from "gsap/gsap-core";
-import TweenTarget = gsap.TweenTarget;
+import { TimelineLite, TweenTarget } from "gsap/all";
 
 export type PointerId = string;
 export type XIndex = number;
@@ -7,19 +6,10 @@ export type XIndex = number;
 export enum Color {
   red = "red",
   orange = "orange",
-  pink = "pink",
   lightgreen = "lightgreen",
   black = "black",
   purple = "purple",
 }
-
-export const colors = {
-  SELECTED: "#aed049",
-  GREEN: "#aed049",
-  ORANGE: "orange",
-  LIGHT_BLUE: "lightblue",
-  DEFAULT: "#ffffff",
-};
 
 export const times = {
   DURATION: 0.3,
@@ -56,12 +46,3 @@ export function fadeInPointer(timeline: TimelineLite, elem: TweenTarget, color =
 export function showPointer(timeline: TimelineLite, elem: TweenTarget, color = "white") {
   timeline.set(elem, { color, visibility: "visible", opacity: 1, duration: 0 });
 }
-
-// export function advancePointer(timeline: Timeline, target: TweenTarget, index: number, step: number) {
-//   timeline.to(stack.elems.POINTER_1, {
-//     translateX: (step + 1) * 40,
-//     duration: times.DURATION,
-//     delay: index > 0 ? times.DURATION : 0,
-//     ease: "release",
-//   });
-// }
