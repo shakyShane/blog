@@ -4,7 +4,7 @@ import { Cell, name } from "./algo-cell.lit";
 
 console.log("register %O", name);
 
-type Item = { id: string; char: string };
+export type StackItem = { id: string; char: string };
 
 @customElement("algo-stack")
 export class Stack extends LitElement {
@@ -30,7 +30,7 @@ export class Stack extends LitElement {
   input: string = "";
 
   @property()
-  stack: Item[] = [];
+  stack: StackItem[] = [];
 
   /**
    * The stack to display

@@ -1,16 +1,9 @@
 import { customElement, property, query } from "lit/decorators.js";
-import { css, html, LitElement } from "lit";
+import { html, LitElement } from "lit";
 import { createRef, ref } from "lit/directives/ref.js";
 
 @customElement("algo-input")
 export class AlgoInput extends LitElement {
-  static styles = css`
-    :host {
-    }
-    button {
-    }
-  `;
-
   inputRef = createRef<HTMLInputElement>();
 
   @property()
@@ -30,8 +23,16 @@ export class AlgoInput extends LitElement {
   render() {
     return html`<div>
       <form @submit=${this._submit}>
-        <input type="text" name="input" maxlength="15" value=${this.input} ${ref(this.inputRef)} autocomplete="off" />
-        <button type="submit">Submit</button>
+        <input
+          placeholder="max 15 chars"
+          type="text"
+          name="input"
+          maxlength="15"
+          value=${this.input}
+          ${ref(this.inputRef)}
+          autocomplete="off"
+        />
+        <button type="submit">Update</button>
       </form>
     </div>`;
   }

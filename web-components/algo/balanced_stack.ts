@@ -15,6 +15,7 @@ console.log("register %O", pointerRowName);
 console.log("register %O", resultName);
 
 export type Op =
+  | { kind: "init" }
   | { kind: "create"; color: Color; id: PointerId; x: XIndex }
   | { kind: "append-stack"; id: string; char: string; index: number }
   | { kind: "pop-stack"; id: string }
@@ -22,9 +23,10 @@ export type Op =
   | { kind: "stack-match"; inputId: PointerId; stackId: PointerId }
   | { kind: "stack-none-match"; inputId: PointerId; stackId: PointerId }
   | { kind: "remove"; id: PointerId }
-  | { kind: "result"; result: boolean };
+  | { kind: "result"; result: boolean }
+  | { kind: "highlight-stack" };
 
-export function init(resultOps: ResultOps, elems: Elems, timeline: TimelineLite) {
+export function initAnimations(resultOps: ResultOps, elems: Elems, timeline: TimelineLite) {
   const params: BalancedStack = {
     elems,
     pointers: (id) => {
@@ -33,12 +35,10 @@ export function init(resultOps: ResultOps, elems: Elems, timeline: TimelineLite)
     timelines: { main: timeline },
   };
 
-  setTimeout(() => {
-    bounceInputIn(timeline, params.elems.INPUT.cells());
-    resultOps.ops.forEach((op) => {
-      process(op, params);
-    });
-  }, 0);
+  bounceInputIn(timeline, params.elems.INPUT.cells());
+  resultOps.ops.forEach((op) => {
+    process(op, params);
+  });
 }
 
 interface Elems {
@@ -89,7 +89,7 @@ function process(op: Op, params: BalancedStack) {
       const inputChar = INPUT.byId(op.inputId);
       const stackChar = STACK.byId(op.stackId);
       invariant(inputChar && stackChar, "`stack-match` inputChar and stackChar required");
-      main.to([inputChar, stackChar], { scale: 2 }).to([inputChar, stackChar], { scale: 1 });
+      main.to([inputChar, stackChar], { scale: 2.5 }).to([inputChar, stackChar], { scale: 1 });
       break;
     }
     case "stack-none-match": {
@@ -105,11 +105,18 @@ function process(op: Op, params: BalancedStack) {
     }
     case "remove": {
       const x = params.pointers(op.id);
-      main.to(x, { opacity: 0, visibility: "visible" });
+      main.to(x, { opacity: 0 });
       break;
     }
     case "result": {
-      main.to(params.elems.RESULT, { opacity: 1, visibility: "visible" });
+      // main.to(params.elems.RESULT, { opacity: 1, visibility: "visible" });
+      break;
+    }
+    case "highlight-stack": {
+      console.log("shane:", params.elems.STACK.cells());
+      main
+        .to(params.elems.STACK.cells(), { scale: 2, color: Color.red })
+        .to(params.elems.STACK.cells(), { scale: 1, color: Color.black, delay: 0.5 });
       break;
     }
     default:
@@ -117,7 +124,9 @@ function process(op: Op, params: BalancedStack) {
   }
 }
 
+let calls = 0;
 export function balanced_stack_2(input: string, ops: Op[]): boolean {
+  calls += 1;
   let nextId = "a";
   ops.push({ kind: "create", id: nextId, x: 0, color: Color.black });
   const stackIds: string[] = [];
@@ -165,6 +174,11 @@ export function balanced_stack_2(input: string, ops: Op[]): boolean {
   const final_result = result === true && stack.length === 0;
   if (final_result) {
     ops.push({ kind: "remove", id: nextId });
+  } else {
+    if (stack.length !== 0) {
+      console.log("shane: not empty", stackIds);
+      ops.push({ kind: "highlight-stack" });
+    }
   }
   ops.push({ kind: "result", result: final_result });
   return final_result;

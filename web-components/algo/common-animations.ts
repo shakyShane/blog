@@ -1,4 +1,5 @@
-import { TimelineLite, TweenTarget } from "gsap/gsap-core";
+import { TimelineLite } from "gsap/gsap-core";
+import TweenTarget = gsap.TweenTarget;
 
 export type PointerId = string;
 export type XIndex = number;
@@ -38,6 +39,8 @@ export function bounceInputIn<T extends HTMLElement>(timeline, cells: T[]) {
       translateY: 0,
       stagger: 0.1,
       ease: "elastic(1, 0.3)",
+      color: Color.black,
+      scale: 1,
     }
   );
 }

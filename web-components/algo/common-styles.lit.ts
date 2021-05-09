@@ -25,8 +25,4 @@ export const layout = css`
     font-size: 0.8em;
     font-family: monospace;
   }
-  algo-result {
-    opacity: 0;
-    visibility: hidden;
-  }
 `;

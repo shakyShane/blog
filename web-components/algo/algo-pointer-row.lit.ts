@@ -3,7 +3,7 @@ import { css, html, LitElement } from "lit";
 import { Pointer } from "./algo-pointer.lit";
 import { sizes } from "~/web-components/algo/common-animations";
 
-type Row = { id: string };
+export type Row = { id: string };
 
 @customElement("algo-pointer-row")
 export class PointerRow extends LitElement {
