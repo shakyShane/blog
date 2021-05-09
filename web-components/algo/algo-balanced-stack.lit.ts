@@ -68,23 +68,18 @@ export class BalancedStack extends LitElement {
   vecStack: StackItem[];
 
   /**
-   *
+   * Any pointers
    */
   @state()
   pointers: Row[];
 
-  firstUpdated() {
-    this.init()
-      .then((x) => {
-        console.log("updated!");
-      })
-      .catch((e) => {
-        console.error("update error");
-      });
-  }
-
+  /**
+   * This is to be called once initially, and then for
+   * any time the 'input' is changed. This will set state
+   * on this component and cause child components to re-render
+   * @param input
+   */
   derivedState(input: string) {
-    console.log("shane: derived");
     const ops: Op[] = [];
     const stringInput = input;
     const res1 = balanced_stack_2(stringInput, ops);
@@ -110,7 +105,20 @@ export class BalancedStack extends LitElement {
       });
   }
 
-  async init() {
+  /**
+   * Ensure we also begin the animation once the component is ready
+   */
+  firstUpdated() {
+    this.startAnimation().catch((e) => {
+      console.error("Could not init from `firstUpdated`");
+    });
+  }
+
+  /**
+   * Once this component has stopped updating/creating
+   * DOM nodes or other components, start the animations
+   */
+  async startAnimation() {
     await this.updateComplete;
     initAnimations(
       this.result,
@@ -124,11 +132,15 @@ export class BalancedStack extends LitElement {
     );
   }
 
-  submit = (input: string) => {
+  /**
+   * Set's the input and resets animations etc
+   * @param input
+   */
+  setInput = (input: string) => {
     this.timeline.clear();
     this.input = input;
     this.derivedState(this.input);
-    this.init().catch((e) => {
+    this.startAnimation().catch((e) => {
       console.error("an error occurred after submit", e);
     });
   };
@@ -138,7 +150,7 @@ export class BalancedStack extends LitElement {
    */
   render() {
     return html`
-      <algo-input .onSubmit=${this.submit}></algo-input>
+      <algo-input .onSubmit=${this.setInput}></algo-input>
       <div class="row">
         <div>
           <p class="prefix">Input:</p>

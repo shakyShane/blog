@@ -113,7 +113,6 @@ function process(op: Op, params: BalancedStack) {
       break;
     }
     case "highlight-stack": {
-      console.log("shane:", params.elems.STACK.cells());
       main
         .to(params.elems.STACK.cells(), { scale: 2, color: Color.red })
         .to(params.elems.STACK.cells(), { scale: 1, color: Color.black, delay: 0.5 });
@@ -176,7 +175,6 @@ export function balanced_stack_2(input: string, ops: Op[]): boolean {
     ops.push({ kind: "remove", id: nextId });
   } else {
     if (stack.length !== 0) {
-      console.log("shane: not empty", stackIds);
       ops.push({ kind: "highlight-stack" });
     }
   }
