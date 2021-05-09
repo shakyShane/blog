@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "_dev": "next dev",
+    "dev": "concurrently 'yarn _dev' 'yarn modfed:watch'",
     "build": "yarn modfed:build:entry && echo \"BOOTSTRAP=$(node env.js)\" >> .env && next build",
     "lint:fix": "prettier '**/*.{ts,tsx,js,mdx}' --write",
     "modfed:build:entry": "webpack --json './public/modfed-entry.json'",

@@ -88,15 +88,19 @@ function process(op: Op, params: BalancedStack) {
     case "stack-match": {
       const inputChar = INPUT.byId(op.inputId);
       const stackChar = STACK.byId(op.stackId);
-      invariant(inputChar && stackChar, "inputChar and stackChar required");
+      invariant(inputChar && stackChar, "`stack-match` inputChar and stackChar required");
       main.to([inputChar, stackChar], { scale: 2 }).to([inputChar, stackChar], { scale: 1 });
       break;
     }
     case "stack-none-match": {
       const inputChar = INPUT.byId(op.inputId);
       const stackChar = STACK.byId(op.stackId);
-      invariant(inputChar && stackChar, "inputChar and stackChar required");
-      main.to([inputChar, stackChar], { scale: 2, color: Color.red }).to([inputChar, stackChar], { scale: 1 });
+      invariant(inputChar, "'stack-none-match' inputChar required");
+      if (inputChar && stackChar) {
+        main.to([inputChar, stackChar], { scale: 2, color: Color.red }).to([inputChar, stackChar], { scale: 1 });
+      } else {
+        main.to(inputChar, { scale: 2, color: Color.red }).to([inputChar], { scale: 1 });
+      }
       break;
     }
     case "remove": {
@@ -134,7 +138,7 @@ export function balanced_stack_2(input: string, ops: Op[]): boolean {
         stack.push(map[char]);
         const id = `vec-${i}`;
         stackIds.push(id);
-        ops.push({ kind: "append-stack", id: `vec-${i}`, char: map[char], index: stack.length - 1 });
+        ops.push({ kind: "append-stack", id, char: map[char], index: stack.length - 1 });
         break;
       }
       case ")":

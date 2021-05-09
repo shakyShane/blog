@@ -30,11 +30,20 @@ export class BalancedStack extends LitElement {
     super();
     const ops: Op[] = [];
     const res1 = balanced_stack_2(this.getAttribute("input"), ops);
+    // ops.forEach((op) => console.log(op));
     this.result = {
       result: res1,
       input: this.getAttribute("input"),
       ops,
     };
+    this.timeline = new TimelineLite({
+      defaults: { duration: times.DURATION * 1.5 },
+      onComplete: function () {
+        setTimeout(() => {
+          this.restart();
+        }, 1000);
+      },
+    });
   }
 
   pointerRowRef = createRef<PointerRow>();
@@ -56,14 +65,6 @@ export class BalancedStack extends LitElement {
   }
 
   init = () => {
-    this.timeline = new TimelineLite({
-      defaults: { duration: times.DURATION * 1.5 },
-      onComplete: function () {
-        setTimeout(() => {
-          this.restart();
-        }, 1000);
-      },
-    });
     invariant(this.pointerRowRef.value, "this.pointerRowRef.value");
     invariant(this.inputRef.value, "this.inputRef.value");
     invariant(this.stackRef.value, "this.stackRef.value");
