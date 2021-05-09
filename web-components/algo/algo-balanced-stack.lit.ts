@@ -10,6 +10,7 @@ import { PointerRow, Row } from "./algo-pointer-row.lit";
 import { layout } from "./common-styles.lit";
 import { CSSPlugin } from "gsap/CSSPlugin";
 import { TimelineController } from "./controllers/timeline.controller";
+import { Input } from "~/web-components/algo/algo-inputs.lit";
 
 const plugins = [CSSPlugin];
 
@@ -39,6 +40,9 @@ export class BalancedStack extends LitElement {
 
   @property({ type: String })
   input: string = "";
+
+  @property({ type: Array })
+  inputs: Input[] = [];
 
   /**
    * The computed result, done once per input
@@ -142,6 +146,7 @@ export class BalancedStack extends LitElement {
   render() {
     return html`
       <algo-input .onSubmit=${this.setInput}></algo-input>
+      <algo-inputs .onChange=${this.setInput} .inputs=${this.inputs}></algo-inputs>
       <div class="row">
         <div>
           <p class="prefix">Input:</p>

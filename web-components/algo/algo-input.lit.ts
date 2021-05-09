@@ -24,7 +24,7 @@ export class AlgoInput extends LitElement {
     return html`<div>
       <form @submit=${this._submit}>
         <input
-          placeholder="max 15 chars"
+          placeholder="Enter your own, max 15 chars"
           type="text"
           name="input"
           maxlength="15"

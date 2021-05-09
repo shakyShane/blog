@@ -4,6 +4,8 @@ import { html, LitElement } from "lit";
 import invariant from "tiny-invariant";
 import Stack, { StackItem } from "./algo-stack.lit";
 import { Result } from "./algo-result.lit";
+import { name as inputName } from "./algo-input.lit";
+import { Input, name as inputsName } from "./algo-inputs.lit";
 import { balanced_recursive_2, init, Op, ResultOps } from "./balanced_recursive";
 import { PointerRow, Row } from "./algo-pointer-row.lit";
 import { layout } from "./common-styles.lit";
@@ -11,6 +13,9 @@ import { CSSPlugin } from "gsap/CSSPlugin";
 import { TimelineController } from "~/web-components/algo/controllers/timeline.controller";
 
 const plugins = [CSSPlugin];
+
+console.log(inputName);
+console.log(inputsName);
 
 @customElement("algo-balanced-recursive")
 export class BalancedRecursive extends LitElement {
@@ -29,6 +34,9 @@ export class BalancedRecursive extends LitElement {
 
   @property({ type: String })
   input: string = "";
+
+  @property({ type: Array })
+  inputs: Input[] = [];
 
   /**
    * The computed result, done once per input
@@ -116,6 +124,7 @@ export class BalancedRecursive extends LitElement {
   render() {
     return html`
       <algo-input .onSubmit=${this.setInput}></algo-input>
+      <algo-inputs .onChange=${this.setInput} .inputs=${this.inputs}></algo-inputs>
       <div class="row">
         <div>
           <p class="prefix">Input:</p>
