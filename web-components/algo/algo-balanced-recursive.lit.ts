@@ -65,7 +65,7 @@ export class BalancedRecursive extends LitElement {
   derivedState(input: string) {
     const ops: Op[] = [];
     const stringInput = input;
-    const res1 = balanced_recursive_2(stringInput, ops);
+    const res1 = input ? balanced_recursive_2(stringInput, ops) : true;
     this.result = {
       result: res1,
       input: stringInput,
@@ -92,7 +92,7 @@ export class BalancedRecursive extends LitElement {
    * Once this component has stopped updating/creating
    * DOM nodes or other components, start the animations
    */
-  async startAnimation() {
+  startAnimation = async () => {
     await this.updateComplete;
     init(
       this.result,
@@ -103,16 +103,27 @@ export class BalancedRecursive extends LitElement {
       },
       this.timeline.timeline
     );
-  }
+  };
 
   /**
    * Set's the input and resets animations etc
    * @param input
    */
-  setInput = (input: string) => {
+  setInput = async (input: string) => {
     this.timeline.timeline.clear();
+    /**
+     * This is here as an easy way to clear all inline-styles that GSAP adds
+     */
+    this.input = "";
+    this.derivedState("");
+    await this.updateComplete;
+
+    /**
+     * This is the actual update
+     */
     this.input = input;
-    this.derivedState(this.input);
+    this.derivedState(input);
+    await this.updateComplete;
     this.startAnimation().catch((e) => {
       console.error("an error occurred after submit", e);
     });

@@ -1,22 +1,33 @@
-import { customElement, property, query } from "lit/decorators.js";
-import { html, LitElement } from "lit";
+import { customElement, property, query, state } from "lit/decorators.js";
+import { css, html, LitElement } from "lit";
 import { createRef, ref } from "lit/directives/ref.js";
 
 @customElement("algo-input")
 export class AlgoInput extends LitElement {
+  static styles = [
+    css`
+      input {
+        font-size: 16px;
+      }
+      button {
+        font-size: 16px;
+      }
+    `,
+  ];
+
   inputRef = createRef<HTMLInputElement>();
 
   @property()
   onSubmit: (input: string) => void = () => {};
 
-  @property({ type: String })
+  @property()
   input: string = "";
 
-  _submit = (e) => {
+  async _submit(e) {
     e.preventDefault();
     const input = this.inputRef.value!.value.trim().slice(0, 15);
     this.onSubmit(input);
-  };
+  }
   /**
    * Output of this component
    */

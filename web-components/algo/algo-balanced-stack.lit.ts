@@ -77,7 +77,7 @@ export class BalancedStack extends LitElement {
   derivedState(input: string) {
     const ops: Op[] = [];
     const stringInput = input;
-    const res1 = balanced_stack_2(stringInput, ops);
+    const res1 = input ? balanced_stack_2(stringInput, ops) : true;
     this.result = {
       result: res1,
       input: stringInput,
@@ -113,7 +113,7 @@ export class BalancedStack extends LitElement {
    * Once this component has stopped updating/creating
    * DOM nodes or other components, start the animations
    */
-  async startAnimation() {
+  startAnimation = async () => {
     await this.updateComplete;
     initAnimations(
       this.result,
@@ -125,16 +125,27 @@ export class BalancedStack extends LitElement {
       },
       this.timeline.timeline
     );
-  }
+  };
 
   /**
    * Set's the input and resets animations etc
    * @param input
    */
-  setInput = (input: string) => {
+  setInput = async (input: string) => {
     this.timeline.timeline.clear();
+    /**
+     * This is here as an easy way to clear all inline-styles that GSAP adds
+     */
+    this.input = "";
+    this.derivedState("");
+    await this.updateComplete;
+
+    /**
+     * This is the actual update
+     */
     this.input = input;
-    this.derivedState(this.input);
+    this.derivedState(input);
+    await this.updateComplete;
     this.startAnimation().catch((e) => {
       console.error("an error occurred after submit", e);
     });

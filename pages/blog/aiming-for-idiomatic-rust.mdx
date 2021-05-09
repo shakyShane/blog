@@ -14,11 +14,14 @@ to do the book-keeping
 
 <DemoBlock label="visualization">
   <BrowserComponent kind="vanilla" scriptInclude="algo/algo-balanced-stack.lit.ts">
-    <algo-balanced-stack input="((9+1))" inputs='[
+    <algo-balanced-stack
+      input="((9+1))"
+      inputs='[
   { "value": "((9+1))", "label": "Simple balanced" },
   { "value": "(1+2", "label": "Stack not empty" },
   { "value": "((1+2]", "label": "Closing bracket does not match" }
-]'/>
+]'
+    />
   </BrowserComponent>
 </DemoBlock>
 
@@ -28,12 +31,15 @@ This is done in a single pass using recursion
 
 <DemoBlock label="visualization">
   <BrowserComponent kind="vanilla" scriptInclude="algo/algo-balanced-recursive.lit.ts">
-    <algo-balanced-recursive input="(1+2)" inputs='[
+    <algo-balanced-recursive
+      input="(1+2)"
+      inputs='[
   { "value": "(1+2)", "label": "Simple balanced" },
   { "value": "(1+2", "label": "Missing closing paren" },
   { "value": "({123}]", "label": "Closing bracket does not match" },
   { "value": "]123", "label": "Starting on a closing bracket" }
-]' />
+]'
+    />
   </BrowserComponent>
 </DemoBlock>
 

@@ -1,5 +1,5 @@
 import { customElement, property } from "lit/decorators.js";
-import { html, LitElement } from "lit";
+import { css, html, LitElement } from "lit";
 
 export interface Input {
   value: string;
@@ -7,7 +7,14 @@ export interface Input {
 }
 
 @customElement("algo-inputs")
-export class AlgoInput extends LitElement {
+export class AlgoInputs extends LitElement {
+  static styles = [
+    css`
+      select {
+        font-size: 16px;
+      }
+    `,
+  ];
   @property()
   onChange: (input: string) => void = () => {};
 

@@ -68,7 +68,7 @@ function process(op: Op, params: BalancedStack) {
     }
     case "append-stack": {
       const stackElem = STACK.byId(op.id);
-      invariant(stackElem, `missing stack elem id: ${op.id}`);
+      invariant(stackElem, `append-stack, missing stack elem id: ${op.id}`);
       main
         .set(stackElem, { translateX: sizes.CELL * op.index, color: Color.black, visibility: "visible" })
         .fromTo(stackElem, { opacity: 0, scale: 2 }, { opacity: 1, scale: 1 });
@@ -76,7 +76,7 @@ function process(op: Op, params: BalancedStack) {
     }
     case "pop-stack": {
       const stackElem = STACK.byId(op.id);
-      invariant(stackElem, `missing stack elem id: ${op.id}`);
+      invariant(stackElem, `pop-stack, missing stack elem id: ${op.id}`);
       main.to(stackElem, { scale: 0, opacity: 0, visibility: "hidden" });
       break;
     }
@@ -123,9 +123,7 @@ function process(op: Op, params: BalancedStack) {
   }
 }
 
-let calls = 0;
 export function balanced_stack_2(input: string, ops: Op[]): boolean {
-  calls += 1;
   let nextId = "a";
   ops.push({ kind: "create", id: nextId, x: 0, color: Color.black });
   const stackIds: string[] = [];
