@@ -73,7 +73,7 @@ export function LI(props: PropsWithChildren<HTMLAttributes<any>>) {
 
 export function DemoBlock(props: PropsWithChildren<{ label?: string }>) {
   return (
-    <div className="my-6 border-2 rounded p-4 bg-white relative">
+    <div className="my-6 border-2 rounded p-4 pt-8 md:pt-4 bg-white relative">
       {props.label && <BlockLabelLight>{props.label}</BlockLabelLight>}
       {props.children}
     </div>
