@@ -1,4 +1,5 @@
-import { TimelineLite, TweenTarget } from "gsap/all";
+import { TimelineLite } from "gsap";
+import TweenTarget = gsap.TweenTarget;
 
 export type PointerId = string;
 export type XIndex = number;

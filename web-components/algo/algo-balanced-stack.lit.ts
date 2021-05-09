@@ -24,7 +24,7 @@ export type ResultOps = {
 
 @customElement("algo-balanced-stack")
 export class BalancedStack extends LitElement {
-  private timeline = new TimelineController(this, 1000);
+  private timeline = new TimelineController(this);
 
   static styles = [layout];
 
