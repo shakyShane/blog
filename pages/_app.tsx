@@ -1,4 +1,4 @@
-import "tailwindcss/tailwind.css";
+import "../styles/tw.css";
 import "highlight.js/styles/atom-one-dark.css";
 import "../styles/svg.css";
 import { Nav } from "~/ui/Nav";
