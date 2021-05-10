@@ -14,7 +14,8 @@ hljs.registerLanguage("ts", typescript);
 hljs.registerLanguage("js", javascript);
 hljs.registerLanguage("html", html);
 
-export type Lang = "rust" | "html" | "tsx" | "ts" | "js";
+export const names = ["rust", "html", "tsx", "ts", "js"];
+export type Lang = typeof names[number];
 
 export function Highlight(props: PropsWithChildren<{ src: string; lang: Lang }>) {
   let code = props.src;
@@ -37,7 +38,7 @@ export function Highlight(props: PropsWithChildren<{ src: string; lang: Lang }>)
 
 export function BlockLabel(props: PropsWithChildren<any>) {
   return (
-    <code className="text-sm absolute -top-3 md:top-2 right-3 text-gray-600 bg-atom text-code px-2 py-1 rounded">
+    <code className="text-sm absolute -top-3 md:top-2 right-3 text-gray-600 bg-atom text-code px-2 py-1 rounded z-10">
       {props.children}
     </code>
   );
@@ -45,7 +46,7 @@ export function BlockLabel(props: PropsWithChildren<any>) {
 
 export function BlockLabelLight(props: PropsWithChildren<any>) {
   return (
-    <code className="text-sm absolute border-2 -top-4 md:top-3 right-3 text-gray-600 bg-white text-code px-2 py-1 rounded">
+    <code className="text-sm absolute border-2 -top-4 md:top-3 right-3 text-gray-600 bg-white text-code px-2 py-1 rounded z-10">
       {props.children}
     </code>
   );
