@@ -3,20 +3,86 @@ import { BrowserComponent } from "~/modfed/BrowserComponent";
 import { Highlight } from "~/ui/Highlight";
 import { DemoBlock } from "../../ui/Type";
 
-This is a test post for the new blog, and I'm enjoying it
+Recently I was exploring ways to work with pattern matching in Rust - using a small
+relatable example that many people may have come across during technical interviews or in
+online code challenges.
 
-<Highlight src={require("raw-loader!../../rust/main.raw.rs").default} lang={"rust"} />
+The problem is as follows: given a string input, determine if parenthesis, brackets and braces
+are 'balanced'.
+
+That it to say that any occurrence of `(` must eventually be followed by its closing partner `)`.
+
+For example, `()` would be balanced, as would `(1+2)`. If the closing paren is missing however, then
+it's not balanced, such as `(1-3`.
+
+The rule hold true for the other 2 pairs, so this *is* balanced `([{123}])` because each pair is closed
+before another is opened, but `(])` is NOT balanced because `]` has no opener.
+
+## First stack-based approach
+
+Given my background in Web programming, I was not immediately thinking about the most efficient implementation
+in Rust, but rather I was focussing on the pattern-matching syntax and this is what I came up.
+
+<Highlight src={require("raw-loader!../../rust/stack_original.rs").default} lang={"rust"} />
+
+In Big O Notation we'd say this has a time complexity of O(n) since our worst case scenario is that we'd
+have to access every single char once (looping all the way through the string).
+
+The `stack` will grow slightly & contract as elements are added/removed.
+
+### Dropping the nested `match`
+
+I shared my first attempt on [Twitter](https://twitter.com/shaneOsbourne/status/1385711012893057030?s=20), asking for help from fellow Rust developers since the nested
+`match` just felt *wrong*
+
+There were a number of extremely helpful responses (see the tweet/thread), my favourite of which
+shows how the arms in Rust's `match` expressions can be followed by an optional **guard**.
 
 ```rust
-fn main() {
-    let n = "shane";
+///
+/// Without a guard - the first match
+/// arm here just has 3 patterns.
+///
+match c {
+    '(' | '[' | '{' => { /* omitted */ },
+    _ => {}
 }
 ```
 
-## Stack-based solution
+In that example, we say the first match arm has 3 `patterns` and we know where they end due to the `=>`. That is to say that
+everything to the *left* of the `=>` is any number of patterns - it's then followed by the expression to be executed if a match
+is found on this arm.
 
-Whilst this is easier to reason about, it requires the extra data structure
-to do the book-keeping
+### Adding a guard
+
+Notice in the following example how the `if stack.pop() != Some(c)` is placed *before* the `=>` and from what we just learned above
+we know that means it's not the expression to be executed *after* a match. It's actually there as part of the matching and even allows
+mutation of the stack.
+
+```rust
+///
+/// With a guard.
+///
+match c {
+//   Patterns           MatchArmGuard
+// ↓↓↓↓↓↓↓↓↓↓↓↓↓  ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+  ')' | ']' | '}' if stack.pop() != Some(c) => return false,
+  _ => {}
+}
+```
+
+## Putting it together
+
+The full algorithm looks like this now, and although the Match Guard here doesn't
+save that much (the `if` could be inside the block instead), it's usefulness becomes apparent
+when you realised that you can have match guards on each arm.
+
+<Highlight src={require("raw-loader!../../rust/stack_final.rs").default} lang={"rust"} />
+
+## Stack-based solution Visualization
+
+In this visualization you can clearly see how we only have a single pointer (representing the loop) - the stack
+grows/shrinks as comparisons are made.
 
 <DemoBlock label="stack-based visualization">
   <BrowserComponent kind="vanilla" scriptInclude="algo/algo-balanced-stack.lit.ts">
@@ -33,7 +99,12 @@ to do the book-keeping
 
 ## Recursive solution
 
-This is done in a single pass using recursion
+Whilst my original call for help on Twitter was not directly asking for more efficient solutions, I still got
+a fair few people recommending a recursive solution to avoid the overhead of the `Vec<char>`.
+
+The idea is that for this particular problem you can solve it with similar time complexity O(n) but without
+having to allocate memory for the `Vec` and therfore dropping all the book-keeping needed for `Vec` behind the
+scenes like bounds/capacity checking. Not to mention a recursive solution [is more flexible](https://twitter.com/yyyypoi/status/1385850806922932226?s=20)
 
 <DemoBlock label="recursive visualization">
   <BrowserComponent kind="vanilla" scriptInclude="algo/algo-balanced-recursive.lit.ts">

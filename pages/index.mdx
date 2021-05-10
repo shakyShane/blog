@@ -1,12 +1,11 @@
 import { Layout } from "~/ui/Layout";
-import { NAME } from "~/ui/constants";
 
 ## Posts
 
 - [Aiming for idiomatic Rust](/blog/aiming-for-idiomatic-rust)
 
 export const config = {
-  unstable_runtimeJS: process.env.NODE_ENV === "development",
+  unstable_runtimeJS: false,
 };
 
-export default ({ children }) => <Layout meta={{ title: NAME }}>{children}</Layout>;
+export default ({ children }) => <Layout meta={{ title: "Blog" }}>{children}</Layout>;

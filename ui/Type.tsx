@@ -1,6 +1,6 @@
 import React, { AnchorHTMLAttributes, HTMLAttributes, PropsWithChildren } from "react";
 import Link from "next/link";
-import { BlockLabel, BlockLabelLight } from "~/ui/Highlight";
+import { BlockLabelLight } from "~/ui/Highlight";
 
 export const P = (props) => <p className="my-5">{props.children}</p>;
 export const Code = (props) => (
