@@ -15,7 +15,7 @@
     "clean": "rm -rf .next",
     "test": "tsc",
     "tsc:watch": "tsc --watch",
-    "publish": "yarn build && yarn export"
+    "publish-netlify": "yarn build && yarn export"
   },
   "author": "shane osboune",
   "dependencies": {
