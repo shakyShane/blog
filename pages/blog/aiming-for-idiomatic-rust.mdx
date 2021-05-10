@@ -50,7 +50,7 @@ match c {
 ```
 
 In that example, we say the first match arm has 3 `patterns` and we know where they end due to the `=>`. That is to say that
-everything to the *left* of the `=>` is any number of patterns - it's then followed by the expression to be executed if a match
+everything to the *left* of the `=>` is any number of patterns - it's then followed on the *right* by the expression to be executed if a match
 is found on this arm.
 
 ### Adding a guard
@@ -103,8 +103,54 @@ Whilst my original call for help on Twitter was not directly asking for more eff
 a fair few people recommending a recursive solution to avoid the overhead of the `Vec<char>`.
 
 The idea is that for this particular problem you can solve it with similar time complexity O(n) but without
-having to allocate memory for the `Vec` and therfore dropping all the book-keeping needed for `Vec` behind the
-scenes like bounds/capacity checking. Not to mention a recursive solution [is more flexible](https://twitter.com/yyyypoi/status/1385850806922932226?s=20)
+having to allocate memory for the `Vec` and therefore dropping all the behind-the-scenes book-keeping needed for
+`Vec`'s, like bounds & capacity checking. It was noted too, that a recursive solution [is more flexible](https://twitter.com/yyyypoi/status/1385850806922932226?s=20)
+
+<Highlight src={require("raw-loader!../../rust/recursive.rs").default} lang={"rust"} />
+
+Here we've introduced a second function `expect`, which is where the recursion will occur.
+
+We kick it off with the initial call to `expect` from inside `balanced`, providing `None` as the end comparison (the thing we try
+to match when we've seen an opener) and creating a mutable iterator of chars.
+
+Each call to `expect` will end up in the `loop` and 1 char at a time will be accessed from the input. If an opening
+brace/paren/bracket is found then the function is called again with the remainder of the input.
+
+For the example `(1+2)` you can visualize the call stack like this
+
+```shell
+calls to 'expect'
+    1: end: None, input: "(1+2)"
+    1.1 input.next() = "("
+        2: end: Some(")"), input: "1+2)"
+        2.1 input.next() = "1"
+        2.2 input.next() = "+"
+        2.3 input.next() = "2"
+        2.4 input.next() = ")"
+        2.5 return compare Some(")") == Some(c)
+```
+
+Notice that on the very first call because `(` is matched, it means we immediately descend into a recursive call.
+If the input string did not begin with an *opener* then we'd keep consuming chars first.
+
+For the input `123()` the call stack would look like
+
+```shell
+calls to 'expect'
+    1: end: None, input: "123()"
+    1.1 input.next() = "1"
+    1.2 input.next() = "2"
+    1.3 input.next() = "3"
+    1.4 input.next() = "("
+        2: end: Some(")"), input: ")"
+        2.1 input.next() = ")"
+        2.2 return compare Some(")") == Some(c)
+```
+
+## Recursive solution, visualization
+
+The recursive calls are modelled here as extra pointers (highlighted with different colours) - but
+the most important thing to note here is the absence of any additional data structures.
 
 <DemoBlock label="recursive visualization">
   <BrowserComponent kind="vanilla" scriptInclude="algo/algo-balanced-recursive.lit.ts">
@@ -113,12 +159,23 @@ scenes like bounds/capacity checking. Not to mention a recursive solution [is mo
       inputs='[
   { "value": "(1+2)", "label": "Simple balanced" },
   { "value": "(1+2", "label": "Missing closing paren" },
-  { "value": "({123}]", "label": "Closing bracket does not match" },
-  { "value": "]123", "label": "Starting on a closing bracket" }
+  { "value": "({123}]", "label": "Closing does not match" },
+  { "value": "]123", "label": "Starting on a closing" }
 ]'
     />
   </BrowserComponent>
 </DemoBlock>
+
+## Which is 'better'?
+
+These 2 examples solve the same problem, but the recursive solution (especially in a language like Rust) seems to have
+more benefits. The only advantage to the stack-based approach that I can think of is the easier learning curve.
+
+Either way, talking about and creating visualizations of both has helped me develop a feeling for how I can make
+more posts like this, perhaps going over common interview-style questions. Showing their implementations in Rust along with
+animations.
+
+Please reach out to me on Twitter if you'd like to propose a topic.
 
 export const config = {
   unstable_runtimeJS: false,
