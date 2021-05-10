@@ -9,7 +9,7 @@ export function Footer() {
             <div className="px-8">
               <h3 className="font-bold text-gray-900">About</h3>
               <p className="pb-4 text-gray-600 text-sm">
-                A NextJS blog built with MDX files + interactive sections that hydrate independently via or
+                A NextJS blog built with MDX files + interactive sections that hydrate independently via Preact or
                 web-components
               </p>
             </div>
