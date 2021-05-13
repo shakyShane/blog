@@ -15,10 +15,10 @@ That it to say that any occurrence of `(` must eventually be followed by its clo
 For example, `()` would be balanced, as would `(1+2)`. If the closing paren is missing however, then
 it's not balanced, such as `(1-3`.
 
-The rule hold true for the other 2 pairs, so this *is* balanced `([{123}])` because each pair is closed
+The rule holds true for the other 2 pairs, so this *is* balanced `([{123}])` because each pair is closed
 before another is opened, but `(])` is NOT balanced because `]` has no opener.
 
-## First stack-based approach
+## First, a stack-based approach
 
 Given my background in Web programming, I was not immediately thinking about the most efficient implementation
 in Rust, but rather I was focussing on the pattern-matching syntax and this is what I came up.
@@ -28,7 +28,7 @@ in Rust, but rather I was focussing on the pattern-matching syntax and this is w
 In Big O Notation we'd say this has a time complexity of O(n) since our worst case scenario is that we'd
 have to access every single char once (looping all the way through the string).
 
-The `stack` will grow slightly & contract as elements are added/removed.
+The `stack` will grow & contract slightly as elements are added/removed.
 
 ### Dropping the nested `match`
 
@@ -75,7 +75,7 @@ match c {
 
 The full algorithm looks like this now, and although the Match Guard here doesn't
 save that much (the `if` could be inside the block instead), it's usefulness becomes apparent
-when you realised that you can have match guards on each arm.
+when you realise that you can have match guards on multiple arms.
 
 <Highlight src={require("raw-loader!../../rust/stack_final.rs").default} lang={"rust"} />
 
