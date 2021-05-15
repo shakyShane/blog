@@ -1,0 +1,28 @@
+import { Layout } from "~/ui/Layout";
+import { BrowserComponent } from "~/modfed/BrowserComponent";
+import { Highlight } from "~/ui/Highlight";
+import { DemoBlock } from "../../ui/Type";
+
+<DemoBlock label="recursive visualization">
+  <BrowserComponent kind="vanilla" scriptInclude="algo/algo-binary-search.lit.ts">
+    <algo-binary-search
+      input="[1, 2, 3, 4, 5]"
+      search="2"
+      inputs='[]'
+    />
+  </BrowserComponent>
+</DemoBlock>
+
+export const config = {
+  unstable_runtimeJS: false,
+};
+
+export default ({ children }) => (
+  <Layout
+    meta={{
+      title: "Idiomatic Rust: binary search",
+    }}
+  >
+    {children}
+  </Layout>
+);

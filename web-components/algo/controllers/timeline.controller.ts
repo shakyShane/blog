@@ -2,16 +2,23 @@ import { ReactiveController, ReactiveControllerHost } from "lit";
 import { TimelineLite } from "gsap/all";
 import { times } from "~/web-components/algo/common-animations";
 
+interface TimelineOptions {
+  loop?: boolean
+}
+
 export class TimelineController implements ReactiveController {
   host: ReactiveControllerHost;
   timeline: TimelineLite;
 
-  constructor(host: ReactiveControllerHost) {
+  constructor(host: ReactiveControllerHost, options?: TimelineOptions) {
     (this.host = host).addController(this);
+    const loop = options?.loop ?? true;
     this.timeline = new TimelineLite({
       defaults: { duration: times.DURATION * 1.5 },
       onComplete: function () {
-        this.restart();
+        if (loop) {
+          this.restart();
+        }
       },
     });
   }

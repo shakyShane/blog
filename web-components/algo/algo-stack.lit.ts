@@ -1,8 +1,8 @@
 import { customElement, property } from "lit/decorators.js";
 import { css, html, LitElement } from "lit";
-import { Cell, name } from "./algo-cell.lit";
+import { Cell, name as cellName } from "./algo-cell.lit";
 
-console.log("register %O", name);
+console.log("register", cellName);
 
 export type StackItem = { id: string; char: string };
 
@@ -70,3 +70,5 @@ export class Stack extends LitElement {
 }
 
 export default Stack;
+
+export const name = "AlgoStack";
