@@ -3,15 +3,59 @@ import { BrowserComponent } from "~/modfed/BrowserComponent";
 import { Highlight } from "~/ui/Highlight";
 import { DemoBlock } from "../../ui/Type";
 
-<DemoBlock label="recursive visualization">
-  <BrowserComponent kind="vanilla" scriptInclude="algo/algo-binary-search.lit.ts">
-    <algo-binary-search
-      input="[1, 2, 3, 4, 5]"
-      search="2"
-      inputs='[]'
-    />
-  </BrowserComponent>
+It's time to implement another well-known algorithm in Rust - this week's choice is Binary Search.
+
+As always, this post will aim to highlight idiomatic Rust patterns, as well as provide interactive
+visualizations.
+
+## Binary search
+
+The primary purpose of our algorithm is to find the index of a value in an already-sorted list of integers.
+
+<DemoBlock label="binary search visualization">
+    <BrowserComponent kind="vanilla" scriptInclude="algo/algo-binary-search.lit.ts">
+        <algo-binary-search input="[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]" search="2" />
+    </BrowserComponent>
 </DemoBlock>
+
+## First Attempt
+
+The casting here did not seem correct, it looked far too complex.
+
+<Highlight src={require("raw-loader!../../rust/binary_search.original.rs").default} lang={"rust"} />
+
+## A few fixes...
+
+### Fix 1: Removing the call to `floor`
+
+Part of this algorithm requires you to continuously find the mid-point between your remaining items - this becomes
+the new 'middle'. We do this by adding the high + low values, and then dividing by 2. so if `high=5` and `low=0`, then its
+`(5 + 0) / 2 = 2.5`. The issue here is that we need to use a whole number to perform the next index access. We can't do
+`items.get(2.5)` as this just doesn't make any sense.
+
+In a higher-level language such as JavaScript, you would solve this by manually the flooring value after the division.
+
+```js
+const middle = Math.floor((high + low) / 2);
+````
+
+Which is what I originally tried to replicate in Rust, with the following:
+
+```rust
+fn binary_search() {
+    // snip...
+    let middle = (((high + low) / 2) as f64).floor() as i32;
+    // snip...
+}
+```
+
+Thanks to a reply by the ever-helpful Basile Henry on Twitte, I realised that in Rust
+this flooring is simply not needed.
+
+In my original example the `high` and `low` variables were both of type `i32`.
+
+
+<Highlight src={require("raw-loader!../../rust/binary_search.final.rs").default} lang={"rust"} />
 
 export const config = {
   unstable_runtimeJS: false,

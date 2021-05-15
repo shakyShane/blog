@@ -1,9 +1,9 @@
 import { customElement, property, state } from "lit/decorators.js";
 import { css, html, LitElement } from "lit";
-import { Pointer } from "./algo-pointer.lit";
+import {Pointer, PointerVariant} from "./algo-pointer.lit";
 import { sizes } from "~/web-components/algo/common-animations";
 
-export type Row = { id: string };
+export type Row = { id: string, variant?: PointerVariant };
 
 @customElement("algo-pointer-row")
 export class PointerRow extends LitElement {
@@ -57,7 +57,7 @@ export class PointerRow extends LitElement {
   render() {
     return html`<div class="wrap">
       ${this.rows.map((row, index) => {
-        return html`<algo-pointer direction=${this.direction} data-id=${row.id} data-index=${index}></algo-pointer>`;
+        return html`<algo-pointer variant=${row.variant || "arrow"} direction=${this.direction} data-id=${row.id} data-index=${index}></algo-pointer>`;
       })}
     </div> `;
   }

@@ -25,4 +25,19 @@ export const layout = css`
     font-size: 0.8em;
     font-family: monospace;
   }
+  .legend {
+    margin: 0;
+    padding: 0;
+  }
+  .legend li {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: baseline;
+  }
+  .legend li algo-pointer {
+    position: relative;
+    top: 4px;
+    margin-right: 10px;
+  }
 `;

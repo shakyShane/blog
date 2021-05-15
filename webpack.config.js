@@ -4,7 +4,7 @@ const { ESBuildPlugin } = require("esbuild-loader");
 
 const mode = process.env.NODE_ENV || "production";
 const outputName = mode === "production" ? "[name].[contenthash].js" : "[name].js";
-const publicPath = mode === "production" ? "/_next/static/chunks/modfed/" : "http://localhost:8080/webpack";
+const publicPath = mode === "production" ? "/_next/static/chunks/modfed/" : "http://0.0.0.0:8080/webpack";
 const outputDir = mode === "production" ? join(__dirname, ".next/static/chunks/modfed") : "/webpack";
 
 const output = {

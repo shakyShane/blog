@@ -2,6 +2,8 @@ import { customElement, property } from "lit/decorators.js";
 import { css, html, LitElement } from "lit";
 import { sizes } from "~/web-components/algo/common-animations";
 
+export type PointerVariant = "arrow" | "low" | "high";
+
 @customElement("algo-pointer")
 export class Pointer extends LitElement {
   static styles = css`
@@ -30,6 +32,33 @@ export class Pointer extends LitElement {
   @property({ type: String })
   direction: "up" | "down" = "down";
 
+
+  @property({ type: String })
+  variant: PointerVariant = "arrow";
+  
+  get path() {
+    switch (this.variant) {
+      case "arrow": return `
+        M 20 10
+        v 20
+        l -8 -8
+        m 8 8
+        l 8 -8`
+      case "low": return `
+        M 17 10
+        v 20
+        l 9 0`
+      case "high": return `
+        M 15 10
+        v 20
+        M 15 20
+        h 9
+        M 25 10
+        v 20
+      `
+    }
+  }
+
   /**
    * Output of this component
    */
@@ -41,13 +70,7 @@ export class Pointer extends LitElement {
           stroke-linecap="round"
           stroke-width="4"
           fill="none"
-          d="
-            M 20 10
-            v 20
-            l -8 -8
-            m 8 8
-            l 8 -8
-            "
+          d=${this.path}
         />
       </svg>
     </span>`;

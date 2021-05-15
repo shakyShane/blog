@@ -3,7 +3,8 @@ import { TimelineLite } from "gsap/all";
 import { times } from "~/web-components/algo/common-animations";
 
 interface TimelineOptions {
-  loop?: boolean
+  loop?: boolean,
+  duration?: number
 }
 
 export class TimelineController implements ReactiveController {
@@ -14,7 +15,7 @@ export class TimelineController implements ReactiveController {
     (this.host = host).addController(this);
     const loop = options?.loop ?? true;
     this.timeline = new TimelineLite({
-      defaults: { duration: times.DURATION * 1.5 },
+      defaults: { duration: options.duration ?? times.DURATION * 1.5 },
       onComplete: function () {
         if (loop) {
           this.restart();
