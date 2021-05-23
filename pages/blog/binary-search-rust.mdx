@@ -10,7 +10,9 @@ visualizations.
 
 ## Binary search
 
-The primary purpose of our algorithm is to find the index of a value in an already-sorted list of integers.
+The purpose of this algorithm is to determine if a given search value exists in a sorted array. You
+read more about it on the [wikipedia page](https://en.wikipedia.org/wiki/Binary_search_algorithm) and
+I've also created the following visualization to go with it:
 
 <DemoBlock label="binary search visualization">
     <BrowserComponent kind="vanilla" scriptInclude="algo/algo-binary-search.lit.ts">
@@ -18,11 +20,26 @@ The primary purpose of our algorithm is to find the index of a value in an alrea
     </BrowserComponent>
 </DemoBlock>
 
-## First Attempt
+## First Attempt in Rust
 
-The casting here did not seem correct, it looked far too complex.
+As you can see from above, the implementation I chose uses a `high` and `low` cursor that begin
+at either end of the array. We then enter a `while` loop and find the `middle` point each time
+which is compared to the search target.
+
+Each time that comparison is made we decide 1 of 3 things:
+
+- if `middle` matches the search target, we're done
+- if `middle` is *lower* than the search target, we discard **everything** before it, halving the list. We then move our
+    `low` cursor to the start of the remainder of the list
+- likewise, if `middle` is *higher* than the search target, everything after it is discarded and the `high` cursor
+    moves to the relevant place.
+
+So this was my attempt:
 
 <Highlight src={require("raw-loader!../../rust/binary_search.original.rs").default} lang={"rust"} />
+
+Seasoned Rust developers may notice something that I totally over-engineered here, mostly because of my
+background in JavaScript, let's take a look.
 
 ## A few fixes...
 
@@ -30,12 +47,16 @@ The casting here did not seem correct, it looked far too complex.
 
 Part of this algorithm requires you to continuously find the mid-point between your remaining items - this becomes
 the new 'middle'. We do this by adding the high + low values, and then dividing by 2. so if `high=5` and `low=0`, then its
-`(5 + 0) / 2 = 2.5`. The issue here is that we need to use a whole number to perform the next index access. We can't do
+`(5 + 0) / 2 = 2.5`.
+
+The issue here is that we need to use a whole number to perform the next index access. We can't do
 `items.get(2.5)` as this just doesn't make any sense.
 
-In a higher-level language such as JavaScript, you would solve this by manually the flooring value after the division.
+In a higher-level language, such as JavaScript, you would prevent index-access with a none-integer
+by manually the flooring value after the division.
 
 ```js
+// Safe to use in an index-access
 const middle = Math.floor((high + low) / 2);
 ````
 
@@ -49,11 +70,38 @@ fn binary_search() {
 }
 ```
 
-Thanks to a reply by the ever-helpful Basile Henry on Twitte, I realised that in Rust
-this flooring is simply not needed.
+Not only did it look gross - it even *felt* wrong to me when I wrote it.
 
-In my original example the `high` and `low` variables were both of type `i32`.
+I was using my JavaScript implementation as reference, but converted to Rust it just seemed overly complex.
 
+So as always I reached out to the Twitter/Rust community and thanks to a reply by the ever-helpful
+[Basile Henry](https://twitter.com/basile_henry), I realised that in Rust this flooring is not actually
+needed at all.
+
+Division in Rust is achieved with the [`Div`](https://doc.rust-lang.org/beta/std/ops/trait.Div.html#impl-Div%3Ci32%3E) trait,
+and as the documentation states...
+
+```rust
+impl Div<i32> for i32 {
+    // This operation rounds towards zero,
+    // truncating any fractional part of the exact result.
+}
+```
+
+... and since in my original example the `high` and `low` variables were both of type `i32` - this means that
+a division between those 2 primitives would need to yield a value of the same type. To make this possible, the implementation
+`i32 / i32` performs the flooring automatically. Nice.
+
+Annotated with the type for clarity, the before and after would look like this
+
+```rust
+fn binary_search() {
+    // before
+    let middle: i32 = (((high + low) / 2) as f64).floor() as i32;
+    // after
+    let middle: i32 = (high + low) / 2;
+}
+```
 
 <Highlight src={require("raw-loader!../../rust/binary_search.final.rs").default} lang={"rust"} />
 
