@@ -41,7 +41,7 @@ So this was my attempt:
 Seasoned Rust developers may notice something that I totally over-engineered here, mostly because of my
 background in JavaScript, let's take a look.
 
-## A few fixes...
+## A couple of fixes...
 
 ### Fix 1: Removing the call to `floor`
 
@@ -102,6 +102,37 @@ fn binary_search() {
     let middle: i32 = (high + low) / 2;
 }
 ```
+
+### Fix 2: less casting by using `usize` for cursors
+
+Our example is searching for an `i32` in a slice of `i32`'s - but the mistake I made here
+was also using `i32` values as the high and low cursors.
+
+I had `let mut low: i32 = 0` and `let mut high: i32 = items.len() as i32 - 1;` which forced me to cast to a `usize` when looking up
+each `middle` value since `.get()` needs a `usize` value as a pattern.
+
+```rust
+fn binary_search(k: i32, items: &[i32]) {
+    // before:
+    //   cast needed to `usize` since `middle` is `i32`
+    let mut low: i32 = 0;
+    let mut high: i32 = items.len() as i32 - 1;
+    if let Some(current) = items.get(middle as usize) {
+
+    }
+
+    // after:
+    //   when middle is `usize` it's a valid index,
+    //   so no casting is required
+    let mut low: usize = 0;
+    let mut high: usize = items.len() - 1;
+    if let Some(current) = items.get(middle) {
+
+    }
+}
+```
+
+
 
 <Highlight src={require("raw-loader!../../rust/binary_search.final.rs").default} lang={"rust"} />
 
