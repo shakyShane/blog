@@ -132,6 +132,13 @@ fn binary_search(k: i32, items: &[i32]) {
 }
 ```
 
+```rust
+#[test]
+fn test_usize() {
+    let mut n: usize = 0;
+    n -= 1; // !!! thread panicked at 'attempt to subtract with overflow'
+}
+```
 
 
 <Highlight src={require("raw-loader!../../rust/binary_search.final.rs").default} lang={"rust"} />
