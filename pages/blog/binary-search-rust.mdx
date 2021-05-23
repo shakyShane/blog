@@ -132,6 +132,14 @@ fn binary_search(k: i32, items: &[i32]) {
 }
 ```
 
+That's a straight-forward change that further cleans up the code, removing another number conversion - but it
+comes with a slight trade off, explained in the next fix.
+
+
+### Fix 3: ensure `usize` stays above zero
+
+Whilst it's more `idomatic` to use the `usize` number type as cursors in our example, we
+
 ```rust
 #[test]
 fn test_usize() {
