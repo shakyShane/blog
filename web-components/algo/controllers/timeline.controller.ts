@@ -15,7 +15,7 @@ export class TimelineController implements ReactiveController {
     (this.host = host).addController(this);
     const loop = options?.loop ?? true;
     this.timeline = new TimelineLite({
-      defaults: { duration: options.duration ?? times.DURATION * 1.5 },
+      defaults: { duration: options?.duration ?? times.DURATION * 1.5 },
       onComplete: function () {
         if (loop) {
           this.restart();
@@ -24,7 +24,6 @@ export class TimelineController implements ReactiveController {
     });
   }
   hostUpdated() {
-    console.log("host updated");
   }
 
   hostDisconnected() {
