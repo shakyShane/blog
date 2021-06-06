@@ -38,7 +38,17 @@ export class BinarySearch extends LitElement {
 
   constructor() {
     super();
-    this.derivedState(JSON.parse(this.getAttribute("input")), Number(this.getAttribute("search")));
+    const search = Number(this.getAttribute("search"));
+    const input = JSON.parse(
+      this.getAttribute("input")
+    );
+    const impl = (() => {
+      switch (this.getAttribute('impl')) {
+        case "alt": return "alt"
+        default: return "base"
+      }
+    })();
+    this.derivedState(input, search, impl);
   }
 
   pointerRowRef = createRef<PointerRow>();
@@ -50,6 +60,9 @@ export class BinarySearch extends LitElement {
 
   @property({type: Number})
   search: number;
+
+  @property({ type: String })
+  impl: "base" | "alt" = "base";
 
   /**
    * The computed result, done once per input
@@ -75,10 +88,12 @@ export class BinarySearch extends LitElement {
    * on this component and cause child components to re-render
    * @param input
    * @param search
+   * @param impl
    */
-  derivedState(input: number[], search: number) {
+  derivedState(input: number[], search: number, impl: BinarySearch['impl']) {
     const ops: Op[] = [];
-    const res1 = input ? binary_search(search, input, ops) : -1;
+    const fn = impl === "base" ? binary_search : binary_search_alt;
+    const res1 = input ? fn(search, input, ops) : -1;
     this.result = {
       result: res1,
       input: input,
@@ -138,7 +153,7 @@ export class BinarySearch extends LitElement {
      * This is here as an easy way to clear all inline-styles that GSAP adds
      */
     this.input = [];
-    this.derivedState([], -1);
+    this.derivedState([], -1, this.impl);
     await this.updateComplete;
 
     /**
@@ -146,7 +161,7 @@ export class BinarySearch extends LitElement {
      */
     this.input = old;
     this.search = search;
-    this.derivedState(old, search);
+    this.derivedState(old, search, this.impl);
     await this.updateComplete;
     this.startAnimation().catch((e) => {
       console.error("an error occurred after submit", e);
@@ -321,6 +336,63 @@ function binary_search(k: number, input: number[], ops: Op[]): number {
     }
     if (current > k) {
       high = middle - 1;
+      ops.push({
+        kind: "move",
+        id: "high",
+        x: high,
+      });
+    }
+    if (current < k) {
+      low = middle + 1;
+      ops.push({
+        kind: "move",
+        id: "low",
+        x: low,
+      });
+    }
+  }
+  return null;
+}
+
+function binary_search_alt(k: number, input: number[], ops: Op[]): number {
+  let low = 0;
+  let high = input.length;
+  let firstMiddle = Math.floor((high + low) / 2);
+
+  ops.push({
+    kind: "create-many",
+    items: [
+      {id: "low", x: 0, color: Color.black, variant: "low"},
+      {id: "high", x: high, color: Color.orange, variant: 'high'},
+    ],
+  });
+
+  ops.push({
+    kind: "create",
+    id: "middle",
+    x: firstMiddle,
+    color: Color.purple,
+  });
+
+  while (low < high) {
+    const middle = Math.floor((high + low) / 2);
+    if (middle !== firstMiddle) {
+      ops.push({
+        kind: "move",
+        id: "middle",
+        x: middle,
+      });
+    }
+    const current = input[middle];
+    if (current === k) {
+      ops.push({
+        kind: "highlight-index",
+        index: middle,
+      });
+      return middle;
+    }
+    if (current > k) {
+      high = middle;
       ops.push({
         kind: "move",
         id: "high",

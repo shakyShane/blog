@@ -1,18 +1,18 @@
-import { Layout } from "~/ui/Layout";
-import { BrowserComponent } from "~/modfed/BrowserComponent";
-import { Highlight } from "~/ui/Highlight";
-import { DemoBlock } from "../../ui/Type";
+import {Layout} from "~/ui/Layout";
+import {BrowserComponent} from "~/modfed/BrowserComponent";
+import {Highlight} from "~/ui/Highlight";
+import {DemoBlock} from "../../ui/Type";
 
 This is a follow-up to the [original article](/blog/binary-search-rust) where I looked at a few ways
 to improve my Rust implementation of Binary search - with a focus on removing 'mistakes'
 and making it as 'idiomatic' as possible.
 
-The most common piece of feedback I received on the result of the first article
-was related to the comparison between the `middle` value and high/low cursors.
+The most common piece of feedback I received on the first article
+was related to the comparison between the `middle` value and `high`/`low` cursors.
 
 ## Wasn't too far off
 
-In my original Tweet (even before the first article) I had presented a variant of the algorithm
+In my [original Tweet](https://twitter.com/shaneOsbourne/status/1393474532380446720) (even before the first article) I had presented a variant of the algorithm
 that used pattern matching for this comparison via Rust's `match` construct.
 
 **One of my first attempts**
@@ -36,7 +36,7 @@ pub fn binary_search_alt(k: i32, items: &[i32]) -> Option<i32> {
 ```
 
 If we apply the feedback from the [first article](/blog/binary-search-rust) to this implementation,
-we'd end up with the following - which is just a bit cleaner since it removes some casting, and the manual
+we'd end up with the following - which is just a bit cleaner since it removes some casting along with the manual
 'flooring' I was originally doing.
 
 ```rust
@@ -49,10 +49,10 @@ pub fn binary_search_alt(k: i32, items: &[i32]) -> Option<usize> {
         match items.get(middle as usize) {
             Some(current) if *current == k => return Some(middle),
             Some(current) if *current > k => {
-                if middle == 0 { return None };
+                if middle == 0 { return None; };
                 high = middle - 1
-            },
-            Some(current) if *current < k => { low = middle + 1; },
+            }
+            Some(current) if *current < k => { low = middle + 1; }
             _ => {}
         }
     }
@@ -62,11 +62,11 @@ pub fn binary_search_alt(k: i32, items: &[i32]) -> Option<usize> {
 
 ## The debate begins.
 
-This is where it became a bit complicated - I originally received some feedback on Twitter
-suggesting that because I'm not using the return value of the `match` block in any of the arms
-and the fact I'm only using it to mutate the high/low cursors could possibly make this *not* idomatic Rust...
+This is where it became a bit complicated. I originally received some feedback on Twitter
+that suggested because I'm not using the return value of the `match` block in any of the arms, along with
+the fact that I'm only using it to mutate the high/low cursors, that this could be deemed *not* idiomatic Rust...
 
-I fully understood the feedback at the time, and to rectify the match could be written like so:
+I fully understood that feedback, and to rectify the match could be written like so:
 
 ```rust
 match items.get(middle as usize) {
@@ -83,17 +83,17 @@ match items.get(middle as usize) {
 Now each match arm has no trailing expression, possibly making it clearer to the
 next developer that we didn't intend on returning a value here from the match block.
 
-Is this implementation *more* idiomatic? I'm not entirely convinced.
+Is this implementation *more* idiomatic? I'm not entirely sure.
 
 ## More feedback
 
-There are 2 reasons that I'm not sure about this piece of feedback.
+There are 2 reasons that I'm not sure about this.
 
 1: Rust makes heavy use of pattern matching, and whilst `match` is technically an expression
 itself (and therefore can be used as a value), I don't think it's an issue if it's not *always* used as a value?.
 
-2: It seems like it would be more of an issue if each arm of the match had different semantics -
-for example if one arm returned a value and another didn't. This would make the implementation inconsistent,
+2: It seems like it would be more of an issue if each arm of the match had different semantics. For example, if one
+arm returned a value and another didn't. This would make the implementation inconsistent,
 and the viewpoint may hold more water, but Rust's type system will not allow this anyway since each
 arm of the `match` *must* return the same value.
 
@@ -107,7 +107,7 @@ to continue the conversation 😀
 
 Our algorithm is searching within a slice of `i32` values. On each iteration we are accessing a value from the slice
 with the `.get()` method. This was done for safety since a runtime panic can occur if you attempt
-an index access with an out-of-bounds value.
+an index-access with a value that would be out-of-bounds.
 
 ```rust
 fn this_will_panic() {
@@ -142,8 +142,8 @@ let item = items.get(4)
 let item = items[4]
 ```
 
-This affected our algorithm in the [first article](/blog/binary-search-rust) since we needed to use an `if let`
-expression to expose the current value via the `Some(current)` pattern.
+This affected our algorithm in the [first article](/blog/binary-search-rust) since we needed to use an [`if let`
+expression](https://doc.rust-lang.org/reference/expressions/if-expr.html#if-let-expressions) to expose the current value via the `Some(current)` pattern.
 
 ```rust
 //     ↓↓↓↓↓↓↓↓↓↓↓↓
@@ -177,7 +177,7 @@ if current == k {
 }
 ```
 
-Now we're confident that a direct index access is always safe, since we control the `middle` value - but how does
+Now we can be confident that a direct index access is always safe, since we control the `middle` value, but how does
 this help us with the match expression mentioned previously?
 
 ## Improvement 2: Making the comparison only once
@@ -209,9 +209,10 @@ match items[middle] {
 }
 ```
 
-Which is barely even an improvement 🙁, but it's missing the big next step - which is another move towards
-more idiomatic Rust - and that's to take advantage of the fact that the `Ord` trait is implemented for
-`i32` in the standard library (along with a few other number types).
+Which is barely even an improvement 🙁! If anything, I'd say it's actually harder to read.
+
+It's missing the next big step, which is also another move towards more idiomatic Rust - and that's to take advantage
+of the fact that the `Ord` trait is implemented for `i32` in the standard library.
 
 The `Ord` trait has a `.cmp(other)` method which returns a variant of the `Ordering` enum, it's definition
 looks like this...
@@ -241,17 +242,17 @@ it removes the need to manually check `equal`, `greater`, and `less` in an imper
 up being more *declarative* since we're no longer defining the actual implementation.
 
 After the call to `.cmp(other)` we now have a value which is equal to one of `Ordering`'s 3 enum variants
-and this is where languages with Pattern Matching really shine, since we can do a match on the variant and
-greatly simplify our code.
+and this is where languages with Pattern Matching really shine since we can do a `match` on the variant and
+simplify our code quite a bit.
 
 ```rust
 match items[middle].cmp(&k) {
-    Equal => return Some(middle),
-    Greater => {
+    Ordering::Equal => return Some(middle),
+    Ordering::Greater => {
         if middle == 0 { return None };
         high = middle - 1
     },
-    Less => low = middle + 1
+    Ordering::Less => low = middle + 1
 }
 ```
 
@@ -262,18 +263,19 @@ the empty `_ => {}` as a final catch-all match arm either. 🙏
 
 A final thing to note here is that since we're invoking a method implemented for the `Ord` trait, it means that
 our algorithm could be made more generic in the future to include searching for any type that implements `Ord`, and
-not just `i32` as in our example. This is a great example of the power of traits in Rust.
+not just `i32` as in our example. This would make a great follow-on blog post, highlighting the power of traits in Rust, please
+reach out to me on [Twitter](https://twitter.com/shaneOsbourne) if you'd like to see that post happen 🐦
 
 ## Putting it together
 
 After applying both improvements documented so far (removing `Option` + doing a single comparison) we end up with
 the following implementation - which is clearly a big improvement 👌.
 
-<Highlight src={require("raw-loader!../../rust/binary_search.final.2.rs").default} lang={"rust"} />
+<Highlight src={require("raw-loader!../../rust/binary_search.final.2.rs").default} lang={"rust"}/>
 
 ## Final improvement: removing the checks related to `usize` dropping below zero.
 
-There are still 2 lines in our implementation that still feel 'over-engineered' - or rather, it feels like
+There are 2 lines in our implementation that still feel 'over-engineered' - or rather, it feels like
 they could be improved, or removed.
 
 ```rust
@@ -290,10 +292,45 @@ and only ever re-assign it to either the length of the slice at the start of the
 middle value, we can be sure that we'll never decrease its value below zero, and therefore we can remove
 both of the checks mentioned above.
 
+We'd be ensuring that none of the mutable `usize` cursors can ever drop below zero, and that would allow us to remove those
+two manual checks.
+
+## Final implementation?
+
 That leaves us with the following, which I'm starting to feel happy about
 after these 2 long blog posts & the feedback I received on Twitter 🙏
 
-<Highlight src={require("raw-loader!../../rust/binary_search.final.3.rs").default} lang={"rust"} />
+<Highlight src={require("raw-loader!../../rust/binary_search.final.3.rs").default} lang={"rust"}/>
+
+## Algorithm differences visualized
+
+This first visualization here shows how all the demos across both posts (apart from the
+final change) play out
+
+<DemoBlock label="Original">
+    <BrowserComponent kind="vanilla" scriptInclude="algo/algo-binary-search.lit.ts">
+        <algo-binary-search
+            input="[0, 1, 2, 3, 4, 5, 6, 7, 8]"
+            search="2"
+            impl="base"
+        />
+    </BrowserComponent>
+</DemoBlock>
+
+This next visualization shows how much simpler everything becomes when you have `high`
+as the exclusive upper bound - fewer steps are taken overall. Also note how the `high`
+cursor begins at 1 index higher than the end of the list, whereas previously it began
+on the last element directly.
+
+<DemoBlock label="Exclusive upper bound">
+    <BrowserComponent kind="vanilla" scriptInclude="algo/algo-binary-search.lit.ts">
+        <algo-binary-search
+            input="[0, 1, 2, 3, 4, 5, 6, 7, 8]"
+            search="2"
+            impl="alt"
+        />
+    </BrowserComponent>
+</DemoBlock>
 
 ## Thanks!
 
@@ -306,15 +343,15 @@ I'd love to hear any feedback or alternative ways to implement this algorithm in
 out on [Twitter](https://twitter.com/shaneOsbourne) if you have any thoughts 🦀
 
 export const config = {
-  unstable_runtimeJS: false,
+    unstable_runtimeJS: false,
 };
 
-export default ({ children }) => (
-  <Layout
-    meta={{
-      title: "Idiomatic Rust? Implementing binary search (part 2)",
-    }}
-  >
-    {children}
-  </Layout>
+export default ({children}) => (
+    <Layout
+        meta={{
+            title: "Idiomatic Rust? Implementing binary search (part 2)",
+        }}
+    >
+        {children}
+    </Layout>
 );
