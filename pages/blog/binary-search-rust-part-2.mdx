@@ -165,8 +165,8 @@ sure to be within the slice bounds - otherwise we'd get a runtime panic! Well it
 algorithm was actually doing all the checks we need - it always ensures the next index access is above zero and is below
 the max length of the slice.
 
-This means, in terms of the original article, we could've replaced the `if let Some(current)` with a simple index
-access which makes the solution less syntactically noisy and is just simpler overall.
+This means that in terms of the original article, we could've replaced the `if let Some(current)` with a simple index
+access which makes the solution less syntactically noisy and is simpler overall.
 
 ```rust
 // we know this won't panic since we control 'middle'
