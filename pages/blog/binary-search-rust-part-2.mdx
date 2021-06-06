@@ -1,0 +1,280 @@
+import { Layout } from "~/ui/Layout";
+import { BrowserComponent } from "~/modfed/BrowserComponent";
+import { Highlight } from "~/ui/Highlight";
+import { DemoBlock } from "../../ui/Type";
+
+This is a follow-up to the [original article](/blog/binary-search-rust) where I looked at a few ways
+to improve my Rust implementation of Binary search - with a focus on removing 'mistakes'
+and making it as 'idiomatic' as possible.
+
+The most common piece of feedback I received on the result of the first article
+was related to the comparison between the `middle` value and high/low cursors.
+
+## Wasn't too far off
+
+In my original Tweet (even before the first article) I had presented a variant of the algorithm
+that used pattern matching for this comparison via Rust's `match` construct.
+
+**One of my first attempts**
+
+```rust
+pub fn binary_search_alt(k: i32, items: &[i32]) -> Option<i32> {
+    let mut low: i32 = 0;
+    let mut high: i32 = items.len() as i32 - 1;
+
+    while low <= high {
+        let middle = (((high + low) / 2) as f64).floor() as i32;
+        match items.get(middle as usize) {
+            Some(current) if *current == k => return Some(middle),
+            Some(current) if *current > k => high = middle - 1,
+            Some(current) if *current < k => low = middle + 1,
+            _ => {}
+        }
+    }
+    None
+}
+```
+
+If we apply the feedback from the [first article](/blog/binary-search-rust) to this implementation,
+we'd end up with the following - which is just a bit cleaner since it removes some casting, and the manual
+'flooring' I was originally doing.
+
+```rust
+pub fn binary_search_alt(k: i32, items: &[i32]) -> Option<usize> {
+    let mut low: usize = 0;
+    let mut high: usize = items.len() - 1;
+
+    while low <= high {
+        let middle = (high + low) / 2;
+        match items.get(middle as usize) {
+            Some(current) if *current == k => return Some(middle),
+            Some(current) if *current > k => {
+                if middle == 0 { return None };
+                high = middle - 1
+            },
+            Some(current) if *current < k => { low = middle + 1; },
+            _ => {}
+        }
+    }
+    None
+}
+```
+
+## The debate begins.
+
+This is where it became a bit complicated - I originally received some feedback on Twitter
+suggesting that because I'm not using the return value of the `match` block in any of the arms
+and the fact I'm only using it to mutate the high/low cursors could possibly make this *not* idomatic Rust...
+
+I fully understood the feedback at the time, and to rectify the match could be written like so:
+
+```rust
+match items.get(middle as usize) {
+    Some(current) if *current == k => { return Some(middle); },
+    Some(current) if *current > k => {
+        if middle == 0 { return None };
+        high = middle - 1;
+    },
+    Some(current) if *current < k => { low = middle + 1; },
+    _ => {}
+}
+```
+
+Now each match arm has no trailing expression, possibly making it clearer to the
+next developer that we didn't intend on returning a value here from the match block.
+
+Is this implementation *more* idiomatic? I'm not entirely convinced.
+
+## More feedback
+
+There are 2 reasons that I'm not sure about this piece of feedback.
+
+1: Rust makes heavy use of pattern matching, and whilst `match` is technically an expression
+itself (and therefore can be used as a value), I don't think it's an issue if it's not *always* used as a value?.
+
+2: It seems like it would be more of an issue if each arm of the match had different semantics -
+for example if one arm returned a value and another didn't. This would make the implementation inconsistent,
+and the viewpoint may hold more water, but Rust's type system will not allow this anyway since each
+arm of the `match` *must* return the same value.
+
+For those 2 reasons, the rest of this post will focus on further improving our algorithm
+to fully utilize `match` - but please reach out on [Twitter](https://twitter.com/shaneOsbourne) if you disagree, I'd love
+to continue the conversation 😀
+
+## A new Baseline
+
+### Improvement 1: Removing the `Option`
+
+Our algorithm is searching within a slice of `i32` values. On each iteration we are accessing a value from the slice
+with the `.get()` method. This was done for safety since a runtime panic can occur if you attempt
+an index access with an out-of-bounds value.
+
+```rust
+fn this_will_panic() {
+    let items = vec![10, 40, 90];
+    let forth_item = items[3];
+    println!("{:?}", forth_item)
+    // 'main' panicked at 'index out of bounds:
+    // the len is 3 but the index is 3'
+}
+```
+
+```rust
+fn this_will_not_panic() {
+    let items = vec![10, 40, 90];
+    let first_item = items.get(0);
+    println!("{:?}", first_item);
+    // prints `Some(10)`
+    let forth_item = items.get(3);
+    println!("{:?}", forth_item)
+    // prints `None`
+}
+```
+
+So the second way of accessing a value may be safer, but it comes at the cost of an additional layer
+of indirection in the form of that `Option` type.
+
+```rust
+// return type is Option<i32>
+let item = items.get(4)
+
+// return type is i32, but may panic
+let item = items[4]
+```
+
+This affected our algorithm in the [first article](/blog/binary-search-rust) since we needed to use an `if let`
+expression to expose the current value via the `Some(current)` pattern.
+
+```rust
+//     ↓↓↓↓↓↓↓↓↓↓↓↓
+if let Some(current) = items.get(middle) {
+    if *current == k {
+        // snip
+    }
+    if *current > k {
+        // snip
+    }
+    if *current < k {
+        // snip
+    }
+}
+```
+
+So, to remove the `Option` and therefore also remove `.get()` and `Some(current)`, we'd need to be mathematically
+sure to be within the slice bounds - otherwise we'd get a runtime panic! Well it turns out that our original
+algorithm was actually doing all the checks we need - it always ensures the next index access is above zero and is below
+the max length of the slice.
+
+This means, in terms of the original article, we could've replaced the `if let Some(current)` with a simple index
+access which makes the solution less syntactically noisy and is just simpler overall.
+
+```rust
+// we know this won't panic since we control 'middle'
+//            ↓↓↓↓↓↓↓↓↓↓↓↓↓
+let current = items[middle]
+if current == k {
+   // snip
+}
+```
+
+Now we're confident that a direct index access is always safe, since we control the `middle` value - but how does
+this help us with the match expression mentioned previously?
+
+## Improvement 2: Making the comparison only once
+
+If all we did was take the `match` expression from the beginning of this article, and remove the `Option` as mentioned
+above, we'd end up with something that looked like this
+
+```rust
+// before
+match items.get(middle) {
+    Some(current) if *current == k => return Some(middle),
+    Some(current) if *current > k => {
+        if middle == 0 { return None };
+        high = middle - 1
+    },
+    Some(current) if *current < k => { low = middle + 1; },
+    _ => {}
+}
+
+// after
+match items[middle] {
+    current if current == k => { return Some(middle); },
+    current if *current > k => {
+        if middle == 0 { return None };
+        high = middle - 1
+    },
+    current if *current < k => { low = middle + 1; },
+    _ => {}
+}
+```
+
+Which is barely even an improvement 🙁, but it's missing the big next step - which is another move towards
+more idiomatic Rust - and that's to take advantage of the fact that the `Ord` trait is implemented for
+`i32` in the standard library (along with a few other number types).
+
+The `Ord` trait has a `.cmp(other)` method which returns a variant of the `Ordering` enum, it's definition
+looks like this...
+
+```rust
+// std::cmp
+pub trait Ord: Eq + PartialOrd<Self> {
+    fn cmp(&self, other: &Self) -> Ordering;
+    // snip
+}
+```
+
+... and an example in isolation would look like this:
+
+```rust
+fn main() {
+    let first: i32 = 1;
+    let second: i32 = 3;
+    let result = first.cmp(&second);
+    println!("result = {}", result)
+    // outputs `Less`, `Greater` or `Equal` respectively
+}
+```
+
+Notice how this is consolidating 3 separate comparisons into a single method call -
+it removes the need to manually check `equal`, `greater`, and `less` in an imperative style and instead it ends
+up being more *declarative* since we're no longer defining the actual implementation.
+
+After the call to `.cmp(other)` we now have a value which is equal to one of `Ordering`'s 3 enum variants
+and this is where languages with Pattern Matching really shine, since we can do a match on the variant and
+greatly simplify our code.
+
+```rust
+match items[middle].cmp(&k) {
+    Equal => return Some(middle),
+    Greater => {
+        if middle == 0 { return None };
+        high = middle - 1
+    },
+    Less => low = middle + 1
+}
+```
+
+Along with being a more declarative style, it's also much and less noisy with far fewer things to mentally parse. 😇
+
+Also, since the matching on the `Ordering` enum is exhaustive, we no-longer need
+the empty `_ => {}` as a final catch-all match arm either. 🙏
+
+A final thing to note here is that since we're invoking a method implemented for the `Ord` trait, it means that
+our algorithm could be made more generic in the future to include searching for any type that implements `Ord`, and
+not just `i32` as in our example.
+
+
+export const config = {
+  unstable_runtimeJS: false,
+};
+
+export default ({ children }) => (
+  <Layout
+    meta={{
+      title: "Idiomatic Rust? Implementing binary search (part 2)",
+    }}
+  >
+    {children}
+  </Layout>
+);
