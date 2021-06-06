@@ -46,7 +46,7 @@ pub fn binary_search_alt(k: i32, items: &[i32]) -> Option<usize> {
 
     while low <= high {
         let middle = (high + low) / 2;
-        match items.get(middle as usize) {
+        match items.get(middle) {
             Some(current) if *current == k => return Some(middle),
             Some(current) if *current > k => {
                 if middle == 0 { return None; };
