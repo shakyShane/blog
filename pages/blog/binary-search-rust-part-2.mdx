@@ -255,15 +255,55 @@ match items[middle].cmp(&k) {
 }
 ```
 
-Along with being a more declarative style, it's also much and less noisy with far fewer things to mentally parse. 😇
+Along with being a more declarative style, it's also much less noisy with far fewer things to mentally parse. 😇
 
 Also, since the matching on the `Ordering` enum is exhaustive, we no-longer need
 the empty `_ => {}` as a final catch-all match arm either. 🙏
 
 A final thing to note here is that since we're invoking a method implemented for the `Ord` trait, it means that
 our algorithm could be made more generic in the future to include searching for any type that implements `Ord`, and
-not just `i32` as in our example.
+not just `i32` as in our example. This is a great example of the power of traits in Rust.
 
+## Putting it together
+
+After applying both improvements documented so far (removing `Option` + doing a single comparison) we end up with
+the following implementation - which is clearly a big improvement 👌.
+
+<Highlight src={require("raw-loader!../../rust/binary_search.final.2.rs").default} lang={"rust"} />
+
+## Final improvement: removing the checks related to `usize` dropping below zero.
+
+There are still 2 lines in our implementation that still feel 'over-engineered' - or rather, it feels like
+they could be improved, or removed.
+
+```rust
+// this is the opening check in the function
+if items.is_empty() { return None }
+
+// part of the `Greater` match arm, need to
+// ensure we don't subtract below zero
+if middle == 0 { return None };
+```
+
+To solve this, we need to address the core algorithm. If we define `high` as the exclusive upper bound
+and only ever re-assign it to either the length of the slice at the start of the function, or to a subsequent
+middle value, we can be sure that we'll never decrease its value below zero, and therefore we can remove
+both of the checks mentioned above.
+
+That leaves us with the following, which I'm starting to feel happy about
+after these 2 long blog posts & the feedback I received on Twitter 🙏
+
+<Highlight src={require("raw-loader!../../rust/binary_search.final.3.rs").default} lang={"rust"} />
+
+## Thanks!
+
+A huge thanks to [Wiebe Cnossen](https://twitter.com/wiebecnossen) and [Basile Henry](https://twitter.com/basile_henry)
+for providing the feedback that inspired this follow-up post.
+
+## Does this finally seem like 'idiomatic' Rust?
+
+I'd love to hear any feedback or alternative ways to implement this algorithm in Rust - so please reach
+out on [Twitter](https://twitter.com/shaneOsbourne) if you have any thoughts 🦀
 
 export const config = {
   unstable_runtimeJS: false,

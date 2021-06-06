@@ -24,7 +24,7 @@ export function Highlight(props: PropsWithChildren<{ src: string; lang: Lang }>)
     code = props.src.slice(1);
   }
 
-  let highlighted = hljs.highlight(props.lang, code);
+  let highlighted = hljs.highlight(props.lang, code,);
 
   return (
     <div className="relative">
