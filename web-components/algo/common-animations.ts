@@ -2,6 +2,7 @@ import { TimelineLite } from "gsap";
 import TweenTarget = gsap.TweenTarget;
 
 export type PointerId = string;
+export type ElementId = string;
 export type XIndex = number;
 
 export enum Color {
@@ -19,6 +20,14 @@ export const times = {
 export const sizes = {
   CELL: 20,
 };
+
+export function positionItems<T extends HTMLElement>(timeline, cells: T[]) {
+  cells.forEach((cell, index) => {
+    timeline.set(cell, {
+      translateX: sizes.CELL * index
+    })
+  })
+}
 
 export function bounceInputIn<T extends HTMLElement>(timeline, cells: T[]) {
   timeline.set(cells, { visibility: "visible" }).fromTo(

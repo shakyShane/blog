@@ -1,0 +1,26 @@
+import { Layout } from "~/ui/Layout";
+import { BrowserComponent } from "~/modfed/BrowserComponent";
+import { Highlight } from "~/ui/Highlight";
+import { DemoBlock } from "../../ui/Type";
+
+<DemoBlock label="quick sort visualization">
+  <BrowserComponent kind="vanilla" scriptInclude="algo/algo-quick-sort.lit.ts">
+    <algo-quick-sort
+      input="[7, 3, 4, 2, 1]"
+    />
+  </BrowserComponent>
+</DemoBlock>
+
+export const config = {
+  unstable_runtimeJS: false,
+};
+
+export default ({ children }) => (
+  <Layout
+    meta={{
+      title: "Implementing Quick Sort in Rust",
+    }}
+  >
+    {children}
+  </Layout>
+);

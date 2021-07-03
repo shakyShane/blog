@@ -7,6 +7,7 @@ import { sizes } from "~/web-components/algo/common-animations";
 export class Cell extends LitElement {
   static styles = css`
     .cell {
+      box-sizing: border-box;
       width: ${sizes.CELL}px;
       height: ${sizes.CELL}px;
       display: flex;
@@ -14,6 +15,8 @@ export class Cell extends LitElement {
       justify-content: center;
       text-align: center;
       font-family: monospace;
+      outline: 1px solid red;
+      font-size: 12px;
     }
     .cell-inert {
       color: #747474;

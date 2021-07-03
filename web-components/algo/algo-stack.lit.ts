@@ -1,6 +1,7 @@
 import { customElement, property } from "lit/decorators.js";
 import { css, html, LitElement } from "lit";
 import { Cell, name as cellName } from "./algo-cell.lit";
+import {sizes} from "~/web-components/algo/common-animations";
 
 console.log("register", cellName);
 
@@ -19,6 +20,7 @@ export class Stack extends LitElement {
       }
       [data-layout="absolute"] {
         position: relative;
+        height: ${sizes.CELL}px;
       }
       [data-layout="absolute"] algo-cell {
         position: absolute;
