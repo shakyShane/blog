@@ -31,10 +31,11 @@ console.log("register", pointerRowName);
 console.log("register", inputName);
 console.log("register", resultName);
 
+const DUR = 0.5;
+
 @customElement("algo-quick-sort")
 export class QuickSort extends LitElement {
-  private timeline = new TimelineController(this, {loop: false, duration: .3});
-  private inputTimeline = new TimelineController(this, {loop: false, duration: 1});
+  private timeline = new TimelineController(this, {loop: true, duration: DUR});
 
   static styles = [
     layout,
@@ -105,7 +106,7 @@ export class QuickSort extends LitElement {
       ops,
     };
     this.inputStack = input.map((x, index) => {
-      return {id: `${x}-${index}`, char: String(x)};
+      return {id: `${x}`, char: String(x)};
     });
     this.pointers = this.result.ops
       .filter((op) => op.kind === "create-many" || op.kind === "create")
@@ -141,7 +142,6 @@ export class QuickSort extends LitElement {
         RESULT: this.resultRef.value,
       },
       this.timeline.timeline,
-      this.inputTimeline.timeline
     );
   };
 
@@ -171,6 +171,45 @@ export class QuickSort extends LitElement {
       console.error("an error occurred after submit", e);
     });
   };
+  
+  onPrev() {
+    const [, _current] = this.timeline.timeline.currentLabel().split('-');
+    const current = Number(_current);
+    if (current > 0) {
+      this.timeline.timeline.tweenTo('index-' + (current-1));
+    }
+  }
+
+  onNext() {
+    const [, _current] = this.timeline.timeline.currentLabel().split('-');
+    const current = Number(_current);
+    const indexLabels = Object.keys(this.timeline.timeline.labels)
+      .filter(x => x.startsWith('index-'))
+      .map(label => {
+        const [, index] = label.split('-');
+        return Number(index);
+      })
+    const highest = Math.max(...indexLabels)
+    if (current < highest) {
+      this.timeline.timeline.tweenTo('index-' + (current+1));
+    }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener('keydown', (e) => {
+      switch (e.code) {
+        case "ArrowRight":
+        case "ArrowDown": {
+          return this.onNext()
+        }
+        case "ArrowLeft":
+        case "ArrowUp": {
+          return this.onPrev()
+        }
+      }
+    })
+  }
 
   /**
    * Output of this component
@@ -178,6 +217,10 @@ export class QuickSort extends LitElement {
   render() {
     return html`
         <algo-input .onSubmit=${this.setInput}></algo-input>
+        <p>
+            <button @click=${this.onPrev} type="button">Prev</button>
+            <button @click=${this.onNext} type="button">Next</button>
+        </p>
         <div class="row">
             <div>
                 <p class="prefix">Input:</p>
@@ -190,9 +233,9 @@ export class QuickSort extends LitElement {
         <div class="gap">
           <p class="prefix">Legend: </p>
           <ul class="prefix legend">
-              ${this.pointers.map(p => {
-                return html`<li><algo-pointer variant=${p.variant|| "arrow"}></algo-pointer>${p.id} cursor</li>`
-              })}
+              <li><algo-pointer variant="arrow"></algo-pointer>'i' cursor</li>
+              <li><algo-pointer variant="pivot" style="color: purple"></algo-pointer>Pivot</li>
+              <li><algo-pointer variant="low" style="color: orange"></algo-pointer>Low</li>
           </ul>
         </div>
     `;
@@ -209,13 +252,14 @@ export type ResultOps = {
 
 // prettier-ignore
 export type Op =
-  | { kind: "create"; color: Color; id: PointerId; x: XIndex }
+  | { kind: "create"; color: Color; id: PointerId; x: XIndex; variant: PointerVariant }
   | { kind: "create-many"; items: Array<{ color: Color; id: PointerId; x: XIndex, variant: PointerVariant }> }
   | { kind: "highlight-index"; index: number }
   | { kind: "move"; id: PointerId; x: XIndex }
-  | { kind: "swap"; a: XIndex; b: XIndex }
+  | { kind: "swap"; a: string; b: string, aX: XIndex, bX: XIndex }
   | { kind: "focus"; from: XIndex; to: XIndex }
-  | { kind: "remove"; id: PointerId };
+  | { kind: "remove"; id: PointerId }
+  | { kind: "remove-many"; ids: PointerId[] };
 
 interface Elems {
   INPUT: Stack;
@@ -228,31 +272,34 @@ interface QuickSortParams {
   pointers: (id: string) => Pointer;
   timelines: {
     main: TimelineLite;
-    input: TimelineLite;
   };
 }
 
-export function init(res: ResultOps, elements: Elems, timeline: TimelineLite, inputTimeline: TimelineLite) {
+export function init(res: ResultOps, elements: Elems, timeline: TimelineLite) {
   const params: QuickSortParams = {
     elems: elements,
     pointers: (id) => {
       return elements.POINTER_ROW.byId(id);
     },
-    timelines: {main: timeline, input: inputTimeline},
+    timelines: {main: timeline},
   };
   const cells = params.elems.INPUT.cells();
   positionItems(timeline, cells);
   bounceInputIn(timeline, cells);
-  res.ops.forEach((op) => {
+  res.ops.forEach((op, index) => {
+    timeline.addLabel('index-' + index);
     process(op, params);
   });
+  if (window.location.search.indexOf('pause') > -1) {
+    timeline.pause();
+    timeline.tweenTo('index-1');
+  }
 }
 
 let cc = 0;
 
 function process(op: Op, params: QuickSortParams) {
   const {main} = params.timelines;
-  const {input} = params.timelines;
   switch (op.kind) {
     case "move": {
       const x = params.pointers(op.id);
@@ -290,18 +337,21 @@ function process(op: Op, params: QuickSortParams) {
     }
     case "swap": {
       const next = cc++;
-      main.addLabel("hello-world" + next);
-      main.call(() => {
-        const a = params.elems.INPUT.cells()[op.a];
-        const b = params.elems.INPUT.cells()[op.b];
-        input.to(a, { translateX: op.b * sizes.CELL });
-        input.to(b, { translateX: op.a * sizes.CELL });
-      }, [], "hello-world" + next)
+      const a = params.elems.INPUT.byId(op.a);
+      const b = params.elems.INPUT.byId(op.b)
+      main.addLabel("inner" + next);
+      main.to(a, { translateX: op.bX * sizes.CELL }, 'inner' + next);
+      main.to(b, { translateX: op.aX * sizes.CELL }, 'inner' + next);
       break;
     }
     case "remove": {
       const x = params.pointers(op.id);
       main.to(x, { opacity: 0, visibility: "visible" });
+      break;
+    }
+    case "remove-many": {
+      const xs = op.ids.map(id => params.pointers(id));
+      main.to(xs, { opacity: 0, visibility: "visible" });
       break;
     }
     case "focus": {
@@ -320,13 +370,15 @@ function process(op: Op, params: QuickSortParams) {
 function exec(input: number[], ops: Op[]): number[] {
 
   let callcount = 0;
+  ops.push({kind: "create", id: "low", x: 0, color: Color.orange, variant: "low"})
   quicksort(input, 0, input.length-1);
-  ops.push({kind: 'focus', from: 0, to: input.length-1 })
   return input;
 
   function quicksort(A, lo, hi) {
+    if (callcount !== 0) {
+      ops.push({kind: "move", id:"low", x: lo});
+    }
     callcount+=1;
-    ops.push({kind: "focus", from: lo, to: hi });
     if (lo < hi) {
       const p = partition(A, lo, hi);
       quicksort(A, lo, p - 1)
@@ -342,25 +394,35 @@ function exec(input: number[], ops: Op[]): number[] {
    */
   function partition(A, lo, hi) {
     let pivot = A[hi];
-    let i = lo;
-    ops.push({kind: "create", id: `j-${callcount}`, x: i, color: Color.black})
-    ops.push({kind: "create", id: `pivot-${callcount}`, x: hi, color: Color.purple})
-    for (let j = lo; j < hi; j += 1) {
-      ops.push({kind: "move", id: `j-${callcount}`, x: j})
-      if (A[j] < pivot) {
-        swap(A, i, j);
-        i += 1;
+    let lastLow = lo;
+    ops.push({kind: "create-many", items: [
+      {id: `j-${callcount}`, x: lastLow, color: Color.black, variant: "arrow"},
+      {id: `pivot-${callcount}`, x: hi, color: Color.purple, variant: "pivot"}
+    ]});
+    for (let current = lo; current < hi; current += 1) {
+      ops.push({kind: "move", id: `j-${callcount}`, x: current})
+      if (A[current] < pivot) {
+        swap(A, lastLow, current);
+        lastLow += 1;
       }
     }
-    swap(A, i, hi);
-    ops.push({kind: "remove", id: `j-${callcount}`})
-    ops.push({kind: "remove", id: `pivot-${callcount}`})
-    return i;
+    swap(A, lastLow, hi);
+    ops.push({kind: "remove-many", ids: [
+      `j-${callcount}`,
+      `pivot-${callcount}`
+    ]})
+    return lastLow;
   }
 
   function swap(A, i, j) {
     if (i === j) return; // do nothing if the indexes are equal
-    ops.push({kind: "swap", a: i, b: j})
+    ops.push({
+      kind: "swap",
+      a: String(A[i]),
+      aX: i,
+      b: String(A[j]),
+      bX: j
+    })
     const first = A[i];
     A[i] = A[j];
     A[j] = first;

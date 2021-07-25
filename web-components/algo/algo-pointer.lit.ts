@@ -2,7 +2,7 @@ import { customElement, property } from "lit/decorators.js";
 import { css, html, LitElement } from "lit";
 import { sizes } from "~/web-components/algo/common-animations";
 
-export type PointerVariant = "arrow" | "low" | "high";
+export type PointerVariant = "arrow" | "low" | "high" | "pivot";
 
 @customElement("algo-pointer")
 export class Pointer extends LitElement {
@@ -55,6 +55,11 @@ export class Pointer extends LitElement {
         h 9
         M 25 10
         v 20
+      `
+      case "pivot": return `
+        M 15 30
+               v -20
+               c 13 0, 13 10, 0 10
       `
     }
   }
