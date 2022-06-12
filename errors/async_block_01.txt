@@ -1,0 +1,13 @@
+error[E0277]: the `?` operator can only be used in an async block that returns `Result` or `Option` (or another type that implements `FromResidual`)
+ --> src/async_block_01.rs:6:58
+  |
+5 |           let config = async {
+  |  ____________________________-
+6 | |             let cargo_toml = read_to_string("Cargo.toml")?;
+  | |                                                          ^ cannot use the `?` operator in an async block that returns `(String, String)`
+7 | |             let cargo_lock = read_to_string("Cargo.lock")?;
+8 | |             (cargo_toml, cargo_lock)
+9 | |         };
+  | |_________- this function should return `Result` or `Option` to accept `?`
+  |
+  = help: the trait `FromResidual<Result<Infallible, std::io::Error>>` is not implemented for `(String, String)`

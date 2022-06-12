@@ -23,7 +23,7 @@ before another is opened, but `(])` is NOT balanced because `]` has no opener.
 Given my background in Web programming, I was not immediately thinking about the most efficient implementation
 in Rust, but rather I was focussing on the pattern-matching syntax and this is what I came up.
 
-<Highlight src={require("raw-loader!../../rust/stack_original.rs").default} lang={"rust"} />
+<Highlight src={require("raw-loader!../../src/stack_original.rs").default} lang={"rust"} />
 
 In Big O Notation we'd say this has a time complexity of O(n) since our worst case scenario is that we'd
 have to access every single char once (looping all the way through the string).
@@ -77,7 +77,7 @@ The full algorithm looks like this now, and although the Match Guard here doesn'
 save that much (the `if` could be inside the block instead), it's usefulness becomes apparent
 when you realise that you can have match guards on multiple arms.
 
-<Highlight src={require("raw-loader!../../rust/stack_final.rs").default} lang={"rust"} />
+<Highlight src={require("raw-loader!../../src/stack_final.rs").default} lang={"rust"} />
 
 ## Stack-based solution Visualization
 
@@ -106,7 +106,7 @@ The idea is that for this particular problem you can solve it with similar time 
 having to allocate memory for the `Vec` and therefore dropping all the behind-the-scenes book-keeping needed for
 `Vec`'s, like bounds & capacity checking. It was noted too, that a recursive solution [is more flexible](https://twitter.com/yyyypoi/status/1385850806922932226?s=20)
 
-<Highlight src={require("raw-loader!../../rust/recursive.rs").default} lang={"rust"} />
+<Highlight src={require("raw-loader!../../src/recursive.rs").default} lang={"rust"} />
 
 Here we've introduced a second function `expect`, which is where the recursion will occur.
 

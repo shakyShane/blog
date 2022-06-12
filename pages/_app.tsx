@@ -1,11 +1,11 @@
 import "../styles/tw.css";
-import "highlight.js/styles/atom-one-dark.css";
+import "highlight.js/styles/github-dark.css";
 import "../styles/svg.css";
 import { Nav } from "~/ui/Nav";
 import { Footer } from "~/ui/Footer";
 import { A, Code, H1, H2, H3, HomeLink, LI, P, UL } from "~/ui/Type";
 import { MDXProvider } from "@mdx-js/react";
-import { CodeInPre, Pre } from "~/ui/CodeBlock";
+import {AutoCodeInPre, CodeInPre, Pre} from "~/ui/CodeBlock";
 
 function MyApp({ Component, pageProps, ...rest }) {
   return (
@@ -25,7 +25,7 @@ function MyApp({ Component, pageProps, ...rest }) {
               li: LI,
               p: P,
               a: A,
-              code: CodeInPre,
+              code: AutoCodeInPre,
               inlineCode: Code,
               pre: Pre,
             }}

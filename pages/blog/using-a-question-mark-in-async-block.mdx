@@ -1,0 +1,360 @@
+import { Layout } from "~/ui/Layout";
+import { Highlight } from "~/ui/Highlight";
+
+What's wrong with the following function in Rust?
+
+```rust
+fn measure_cargo_toml() -> usize {
+    let toml = std::fs::read_to_string("Cargo.toml")?;
+    toml.len()
+}
+```
+
+Putting the conversation about whether this is an optimal way to read a file's byte length to one side,
+let's take a look.
+
+`std::fs::read_to_string("Cargo.toml")` returns `Result<String, io::Error>` so
+we tried to use the question mark operator `?` to 'unwrap' the `String` that we really care about.
+
+We're faced with the following error however:
+
+```basic {"errorLines": [0, 1]}
+cannot use the `?` operator in a function that returns `()`
+this function should return `Result` or `Option` to accept `?`
+```
+
+This is suggesting that the `?` is doing a bit more than simply 'unwrapping' a value -
+why's it mentioning the return types at all?
+
+To understand, let's try to unwrap that `String` value a couple of other ways
+
+### if let Ok(..)
+
+If we only ever cared about the success case, then technically we could have done the following instead:
+
+
+```rust {"attentionLines": [1, 4]}
+fn measure_cargo_toml() -> usize {
+    if let Ok(toml) = std::fs::read_to_string("Cargo.toml") {
+        toml.len()
+    } else {
+        0
+    }
+}
+```
+
+Notes:
+
+- 1) we're performing a pattern-match on the return value from `read_to_string` here. The code within the
+`if` block will only execute if the pattern `Ok(toml)` is a match against the result.
+- 2) It looks like our design is breaking down here. To keep the type checker happy we're having to
+use a 'default' value of `0` when the file reading fails. This is far from ideal since `0` could actually be a valid value,
+but more so because it doesn't correctly encode what our function is capable of.
+
+Rust can help us here though, we can use the type system to encode more meaning into our function signatures -
+in this case the presence vs absence of a value can be communicated through the use of the `Option` enum.
+
+If we change our return type to `Option<usize>`, then we can return a `None` in place of the `0` and
+callers of this function will have a better understanding about how this works.
+
+
+```rust {"attentionLines": [0, 2, 4]}
+fn measure_cargo_toml() -> Option<usize> {
+    if let Ok(toml) = std::fs::read_to_string("Cargo.toml") {
+        Some(toml.len())
+    } else {
+        None
+    }
+}
+```
+
+Notes:
+- 1) we changed the return type from `usize` to `Option<usize>`
+- 2) because of that, we now need to wrap our return value in the `Some` variant
+- 3) returning `None` here makes our program more explicit than the previous 'default' value of `0`
+
+## That's a lot of boilerplate though...
+
+Converting from `Result<T, _>` to an `Option<T>` is a fairly a common operation, and
+the standard library comes with a `.ok()` method to help us reduce a bit of boilerplate:
+
+```rust
+pub fn measure_cargo_toml_02() -> Option<usize> {
+    std::fs::read_to_string("Cargo.toml") // Result<String, io::Error>
+        .ok()                             // Option<String>
+        .map(|toml| toml.len())           // Option<usize>
+}
+```
+
+🥰 ahh, this kind of example is one of the reasons I enjoy Rust so much 🦀
+
+---
+
+But wait a minute - that's ignoring any errors that might occur when reading the file - what if we wanted
+to handle that error by passing it on to callers, or even just logging out the error?
+
+To do this, we need to think about our design again. Currently, our signature is this:
+
+```rust
+pub fn measure_cargo_toml() -> Option<usize> {
+    // snip
+}
+```
+
+We can produce a `usize` value, or not - that's it. Our design doesn't incorporate error
+handling at all. So let's change that.
+
+We can alter our return type to be the following instead:
+
+
+```rust {"lines": [], "plusLines": [0], "attentionLines": []}
+pub fn measure_cargo_toml() -> Result<usize, std::io::Error> {
+    // snip
+}
+```
+
+With this change, callers of our function will now be forced to handle the fact that our function can fail.
+They may decide (as we did before) to ignore the error and use a default value, but at least this design
+gives them that choice. `Option<usize>` loses all information if something goes wrong, and we don't want that.
+
+So, to update our implementation to forward any errors, we can do the following instead:
+
+** The re-wrapping method **
+
+```rust {"attentionLines":[2,3]}
+pub fn measure_cargo_toml() -> Result<usize, std::io::Error> {
+    match std::fs::read_to_string("Cargo.toml") {
+        Ok(toml) => Ok(toml.len()),
+        Err(err) => Err(err)
+    }
+}
+```
+
+- 1) When we match on the `Ok` variant, we get a local binding to the value contained inside, named `toml` here, then because *our* return
+type is also a `Result`, we need to `Ok`-wrap the value we get from calling `toml.len()`
+- 2) For the error case we're just re-wrapping the error since it matches our type `std::io::Error`
+
+That's quite a bit of syntax and ceremony for what is essentially a 'change the value inside the box' operation though - but fear not,
+Rust has yet more convenience methods to help with situations like this.
+
+** The `.map()` method **
+
+```rust {"attentionLines":[1,2]}
+pub fn measure_cargo_toml() -> Result<usize, std::io::Error> {
+    let result = std::fs::read_to_string("Cargo.toml");
+    result.map(|s| s.len())
+}
+```
+
+Notes:
+- 1) `read_to_string` returns `Result<String, std::io::Error>` - that's *very* close to what we want. The error part
+matches our signature, but the value part does not.
+- 2) To change *just* the value then, without explicitly unwrapping it, we
+can use the `.map` method as seen here. This will only execute the closure on the value type if the result is of the `Ok` variant.
+It's like opening a box, checking that everything inside is ok, then replacing the value and closing the box again.
+
+So that's a couple of techniques that we can use to handle possible errors and read and return different values
+where there are none.
+
+## Understanding use cases for the `?` operator
+
+So far though, our implementations have only contained 2 operations
+
+- 1) read a file from disk into a string
+- 2) return the amount of bytes that make up that string.
+
+Because of this, we've been able to write a couple of different solutions that that didn't require much
+more than 'reaching into a box' to change a value.
+
+However, there are situations where this 'unwrapping' and 're-wrapping' of values is either tedious or just
+completely overkill for the task at hand.
+
+For example, if we changed our requirement to instead return the combined length from `Cargo.toml` + `Cargo.lock`, then we might
+end up with a solution such as:
+
+```rust {"lines": [], "attentionLines":[6, 10] }
+pub fn main() -> Result<usize, std::io::Error> {
+    let toml = read_to_string("Cargo.toml");
+    let lock = read_to_string("Cargo.lock");
+    let mut count = 0;
+    match toml {
+        Ok(str) => count += str.len(),
+        Err(e) => return Err(e)
+    }
+    match lock {
+        Ok(str) => count += str.len(),
+        Err(e) => return Err(e)
+    }
+    Ok(count)
+}
+```
+
+Notes:
+
+- 1) + 2) Notice how we need to check each result independently so that we can return early if either
+operation fails. We don't want to continue reading the second file if the first one has produced an error!
+
+We can of course remove some of that duplication too using a `for in` loop:
+
+```rust {"attentionLines": [7]}
+pub fn main() -> Result<usize, std::io::Error> {
+    let toml = read_to_string("Cargo.toml");
+    let lock = read_to_string("Cargo.lock");
+    let mut count = 0;
+    for result in [toml, lock] {
+        match result {
+            Ok(str) => count += str.len(),
+            Err(e) => return Err(e)
+        }
+    }
+    Ok(count)
+}
+```
+
+- 1) This is the key part - we're still returning early with an error should one occur.
+
+Or, if you prefer a more functional approach, we can remove the loop and mutable variables with `try_fold`:
+
+```rust {"lines": [5, 6, 7, 8, 9, 10], "attentionLines": [5, 8]}
+pub fn main() -> Result<usize, std::io::Error> {
+    let paths = ["Cargo.toml", "Cargo.lock"];
+    paths
+        .iter()
+        .map(|path| std::fs::read_to_string(path))
+        .try_fold(0, |acc, item| {
+            match item {
+                Ok(string) => Ok(acc + string.len()),
+                Err(e) => Err(e)
+            }
+        })
+}
+```
+
+Notes:
+
+- 1) `try_fold` allows us to reduce a collection down to a single value, but with the added advantage of supporting early returns.
+It works by continuing to call this closure every time the previous iteration returns an `Ok`.
+- 2) For us that means that this line (2) would forward any errors coming from `read_to_string` - causing the `try_fold` to
+stop iterating and return the error. That error it returns matches our function signature, so we can keep everything in a nice neat package
+with no external variables to mutate.
+
+## But...
+
+Back to basics for a second here - in the examples above, we've taken the requirement of "read 2 files from disk and sum their
+byte lengths" and we've ended up with a generic solution that can work with any amount of files.
+
+Whether we choose a `for x in xs` loop, or a chain of iterator methods, we've still leap-frogged from simple -> complex in a heartbeat - is there
+any middle-ground to explore?
+
+** Enter `?`**
+
+The core issue we're having here is the ergonomics around reaching into a `Result` type. Because `read_from_string` forces us
+to deal with the fact that it can fail, it means we can't just access the values safely without a bit of syntax ceremony...
+
+... but that's exactly what `?` (the question mark operator) is here to solve.
+
+If we laser-focus in on *just* solving the 2-file problem, our solution could be as simple as:
+
+```rust {"attentionLines":[3, 4]}
+use std::fs::read_to_string;
+
+fn measure_cargo_files() -> Result<usize, std::io::Error> {
+    let toml = read_to_string("Cargo.toml")?;
+    let lock = read_to_string("Cargo.lock")?;
+    Ok(toml.len() + lock.len())
+}
+```
+
+- 1) + 2) notice how on both of these lines, we add a `?` directly after the `read_to_string()` call. This will either 'unwrap' the
+value (if it was successful), or it will return early with the error. Yep - exactly what we manually implemented earlier can be achieved
+with that simple character.
+
+## How it works: The error types line up!
+
+This may seem like magic, but it's really just a case of our function signature having a return type that's
+suitable for all places where we've used `?`.
+
+So, our return type is:
+
+```basic
+Result<usize, std::io::Error>
+```
+
+whilst the return type of `read_to_string()` is
+
+```basic
+Result<String, std::io::Error>
+```
+
+The types of the values actually differ. Our return type has `usize` for the `Ok` case whereas `read_to_string` has `String`. But for the
+`?` operator to work it's only the `Err` part that needs to line up.
+
+The Rust compiler will analyze all uses of `?` within a function body and determine if each of them is suitable
+for a possible 'early return' in your function.
+
+A de-sugared version of `?` might look something like this:
+
+```rust {"attentionLines": [5]}
+use std::fs::read_to_string;
+
+fn measure_cargo_files() -> Result<usize, std::io::Error> {
+    let toml = match read_to_string("Cargo.toml") {
+        Ok(_toml) => _toml,
+        Err(err) => return Err(err)
+    };
+    // snip
+}
+```
+
+- 1) yep, the `?` is just de-sugaring to an early-return like this, not so magical after all!
+
+
+```basic
+  |
+6 |             return err;
+  |                    ^^^ expected `()`, found struct `std::io::Error`
+```
+
+
+```rust {"attentionLines": [0]}
+fn main() {
+    let toml = std::fs::read_to_string("Cargo.toml")?;
+    println!("Cargo.toml has {} bytes", toml.len());
+}
+```
+
+
+Notes:
+- 1): hello?
+
+```
+error[E0308]: mismatched types
+ --> src/async_block_01.rs:5:16
+  |
+5 |         return 8;
+  |                ^ expected `()`, found integer
+```
+
+<Highlight src={require("raw-loader!../../src/async_block_01.rs").default}
+           lang={"rust"}
+           lines={[4, 5, 6, 7, 8]}
+           attentionLines={[4]}
+/>
+
+<Highlight src={require("raw-loader!../../errors/async_block_01.txt").default}
+    attentionLines={[6]}
+/>
+
+export const config = {
+  unstable_runtimeJS: false,
+};
+
+export default ({ children }) => (
+  <Layout
+    meta={{
+      title: "Unwrapping values with the question mark operator in Rust",
+    }}
+  >
+    {children}
+  </Layout>
+);

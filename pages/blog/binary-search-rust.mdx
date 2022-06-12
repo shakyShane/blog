@@ -43,7 +43,7 @@ Each time that comparison is made we decide 1 of 3 things:
 
 So this was my attempt:
 
-<Highlight src={require("raw-loader!../../rust/binary_search.original.rs").default} lang={"rust"} />
+<Highlight src={require("raw-loader!../../src/binary_search.original.rs").default} lang={"rust"} />
 
 Seasoned Rust developers may notice something that I totally over-engineered here, mostly because of my
 background in JavaScript, let's take a look.
@@ -197,7 +197,7 @@ if you have any :)
 
 ---
 
-<Highlight src={require("raw-loader!../../rust/binary_search.final.rs").default} lang={"rust"} />
+<Highlight src={require("raw-loader!../../src/binary_search.final.rs").default} lang={"rust"} />
 
 export const config = {
   unstable_runtimeJS: false,

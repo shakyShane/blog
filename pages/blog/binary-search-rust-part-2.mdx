@@ -271,7 +271,7 @@ reach out to me on [Twitter](https://twitter.com/shaneOsbourne) if you'd like to
 After applying both improvements documented so far (removing `Option` + doing a single comparison) we end up with
 the following implementation - which is clearly a big improvement 👌.
 
-<Highlight src={require("raw-loader!../../rust/binary_search.final.2.rs").default} lang={"rust"}/>
+<Highlight src={require("raw-loader!../../src/binary_search.final.2.rs").default} lang={"rust"}/>
 
 ## Final improvement: removing the checks related to `usize` dropping below zero.
 
@@ -300,7 +300,7 @@ two manual checks.
 That leaves us with the following, which I'm starting to feel happy about
 after these 2 long blog posts & the feedback I received on Twitter 🙏
 
-<Highlight src={require("raw-loader!../../rust/binary_search.final.3.rs").default} lang={"rust"}/>
+<Highlight src={require("raw-loader!../../src/binary_search.final.3.rs").default} lang={"rust"}/>
 
 ## Algorithm differences visualized
 

@@ -2,3 +2,34 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+[data-highlight-line] {
+    position: relative;
+}
+[data-highlight-line="highlight"] {
+    background: #2a3957;
+    outline: #1e273a;
+}
+[data-highlight-line="plus"] {
+    background: #2a5746;
+    outline: #1e273a;
+}
+[data-highlight-line="error"] {
+    background: #591a00;
+}
+[data-highlight-line="plus"]::before {
+    content: "+";
+    position: absolute;
+    top: 0;
+    left: 5px;
+    color: white;
+    font-size: 0.8rem;
+}
+[data-line-content]::before {
+    content: attr(data-line-content);
+    position: absolute;
+    top: 0;
+    left: 5px;
+    color: white;
+    font-size: 0.8rem;
+}
