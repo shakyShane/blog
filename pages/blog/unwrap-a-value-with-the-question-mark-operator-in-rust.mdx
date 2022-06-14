@@ -10,11 +10,11 @@ fn measure_cargo_toml() -> usize {
 }
 ```
 
-Putting the conversation about whether this is an optimal way to read a file's byte length to one side,
-let's take a look.
+Putting whether this is an optimal way to read a file's length to one side for a moment,
+let's take a look into why this causes a compile-time error.
 
-`std::fs::read_to_string("Cargo.toml")` returns `Result<String, io::Error>` so
-we tried to use the question mark operator `?` to 'unwrap' the `String` that we really care about.
+`std::fs::read_to_string("Cargo.toml")` returns `Result<String, std::io::Error>` and
+we tried to use the question mark operator `?` to 'unwrap' the `String` part that we really care about.
 
 We're faced with the following error however:
 
@@ -24,11 +24,11 @@ this function should return `Result` or `Option` to accept `?`
 ```
 
 This is suggesting that the `?` is doing a bit more than simply 'unwrapping' a value -
-why's it mentioning the return types at all?
+why's it mentioning the return type at all?
 
-To understand, let's try to unwrap that `String` value a couple of other ways
+To understand, let's try to *unwrap* that `String` value a couple of other ways...
 
-### if let Ok(..)
+### `if let` patterns
 
 If we only ever cared about the success case, then technically we could have done the following instead:
 
@@ -78,15 +78,21 @@ Notes:
 Converting from `Result<T, _>` to an `Option<T>` is a fairly a common operation, and
 the standard library comes with a `.ok()` method to help us reduce a bit of boilerplate:
 
-```rust
-pub fn measure_cargo_toml_02() -> Option<usize> {
+```rust { "attentionLines": [2, 3] }
+pub fn measure_cargo_toml() -> Option<usize> {
     std::fs::read_to_string("Cargo.toml") // Result<String, io::Error>
         .ok()                             // Option<String>
         .map(|toml| toml.len())           // Option<usize>
 }
 ```
 
-🥰 ahh, this kind of example is one of the reasons I enjoy Rust so much 🦀
+Notes:
+
+- 1) calling `.ok()` gives us `Option<String>` or `None` depending on whether `read_to_string` was successful -
+it's just a convenience method and allows...
+- 2) ...us to call `.map()` to change the inner value, if it exists.
+
+This is a pretty slick example, it's one of the reasons I enjoy Rust so much 🦀
 
 ---
 
@@ -137,7 +143,10 @@ type is also a `Result`, we need to `Ok`-wrap the value we get from calling `tom
 That's quite a bit of syntax and ceremony for what is essentially a 'change the value inside the box' operation though - but fear not,
 Rust has yet more convenience methods to help with situations like this.
 
-** The `.map()` method **
+** The `.map()` method on `Result`**
+
+We previously saw `.map` being used to alter the value inside a `Option` - well it turns out
+that we can perform the same type of operation on Result too.
 
 ```rust {"attentionLines":[1,2]}
 pub fn measure_cargo_toml() -> Result<usize, std::io::Error> {
@@ -163,7 +172,7 @@ So far though, our implementations have only contained 2 operations
 - 1) read a file from disk into a string
 - 2) return the amount of bytes that make up that string.
 
-Because of this, we've been able to write a couple of different solutions that that didn't require much
+Because of this, we've been able to write a couple of different solutions that didn't require much
 more than 'reaching into a box' to change a value.
 
 However, there are situations where this 'unwrapping' and 're-wrapping' of values is either tedious or just
@@ -211,7 +220,7 @@ pub fn main() -> Result<usize, std::io::Error> {
 }
 ```
 
-- 1) This is the key part - we're still returning early with an error should one occur.
+- 1) This is the key part - we're still returning *early* with an error should one occur.
 
 Or, if you prefer a more functional approach, we can remove the loop and mutable variables with `try_fold`:
 
@@ -238,9 +247,31 @@ It works by continuing to call this closure every time the previous iteration re
 stop iterating and return the error. That error it returns matches our function signature, so we can keep everything in a nice neat package
 with no external variables to mutate.
 
+We can go one step further here too - notice that inside the `try_fold` closure we're doing
+the re-wrapping technique mentioned before. Well since we're forwarding any error as-is we can simplify
+this down to another `.map` call.
+
+```rust {"plusLines": [6]}
+pub fn main() -> Result<usize, std::io::Error> {
+    let paths = ["Cargo.toml", "Cargo.lock"];
+    paths
+        .iter()
+        .map(|path| std::fs::read_to_string(path))
+        .try_fold(0, |acc, item| {
+           item.map(|string| acc + string.len())
+        })
+}
+```
+
+Notes:
+
+- 1) Here the type of `item` is `Result<String, io::Error>`, so if there's an error the closure given to
+`.map` will not be executed - the error will be forwarded instead. That will cause the `try_fold` to exit early which in turn will cause our outer
+function to also return.
+
 ## But...
 
-Back to basics for a second here - in the examples above, we've taken the requirement of "read 2 files from disk and sum their
+Back to basics for a second: in the examples above, we've taken the requirement of "read 2 files from disk and sum their
 byte lengths" and we've ended up with a generic solution that can work with any amount of files.
 
 Whether we choose a `for x in xs` loop, or a chain of iterator methods, we've still leap-frogged from simple -> complex in a heartbeat - is there
@@ -265,9 +296,9 @@ fn measure_cargo_files() -> Result<usize, std::io::Error> {
 }
 ```
 
-- 1) + 2) notice how on both of these lines, we add a `?` directly after the `read_to_string()` call. This will either 'unwrap' the
-value (if it was successful), or it will return early with the error. Yep - exactly what we manually implemented earlier can be achieved
-with that simple character.
+- 1) + 2) notice how on both of these lines, we add a `?` directly after the `read_to_string()` call. This will 'unwrap' the
+value (if it was successful). So the `toml` and `lock` bindings here are both of type
+`String` - they have been 'unwrapped'. If any of those file-reads were to fail though, we'd return early with the error. 👌
 
 ## How it works: The error types line up!
 
@@ -286,8 +317,8 @@ whilst the return type of `read_to_string()` is
 Result<String, std::io::Error>
 ```
 
-The types of the values actually differ. Our return type has `usize` for the `Ok` case whereas `read_to_string` has `String`. But for the
-`?` operator to work it's only the `Err` part that needs to line up.
+The types of the values actually differ - Our return type has `usize` for the `Ok` case whereas `read_to_string` has `String`. But for the
+`?` operator to work it's only the `Err` part that needs to line up - and those do! 😎
 
 The Rust compiler will analyze all uses of `?` within a function body and determine if each of them is suitable
 for a possible 'early return' in your function.
@@ -299,7 +330,7 @@ use std::fs::read_to_string;
 
 fn measure_cargo_files() -> Result<usize, std::io::Error> {
     let toml = match read_to_string("Cargo.toml") {
-        Ok(_toml) => _toml,
+        Ok(toml) => toml,
         Err(err) => return Err(err)
     };
     // snip
@@ -308,42 +339,26 @@ fn measure_cargo_files() -> Result<usize, std::io::Error> {
 
 - 1) yep, the `?` is just de-sugaring to an early-return like this, not so magical after all!
 
+So that's it. The `?` operator can be thought of as `unwrap or return early` -> with the `return early` bit
+being the most important part here. Every time you try to use `?` you absolutely must consider the
+context of what an early return would mean.
 
-```basic
-  |
-6 |             return err;
-  |                    ^^^ expected `()`, found struct `std::io::Error`
-```
+That can differ greatly based on where you're using `?` - something we'll cover in more detail in part 2.
 
+## Part 2...
 
-```rust {"attentionLines": [0]}
-fn main() {
-    let toml = std::fs::read_to_string("Cargo.toml")?;
-    println!("Cargo.toml has {} bytes", toml.len());
-}
-```
+This first post was just a primer to get you thinking of what using `?` really means and why it's useful. It's fundamental
+Rust 🦀 knowledge that you need to have so that we can discuss the many, many more use cases in depth in part 2.
 
+In part 2, we'll cover:
 
-Notes:
-- 1): hello?
+- using `?` in async blocks
+- using `?` in closures
+- how `?` causes `err.into()` to be called - allowing automatic conversion between error types
 
-```
-error[E0308]: mismatched types
- --> src/async_block_01.rs:5:16
-  |
-5 |         return 8;
-  |                ^ expected `()`, found integer
-```
+See you then 👋
 
-<Highlight src={require("raw-loader!../../src/async_block_01.rs").default}
-           lang={"rust"}
-           lines={[4, 5, 6, 7, 8]}
-           attentionLines={[4]}
-/>
-
-<Highlight src={require("raw-loader!../../errors/async_block_01.txt").default}
-    attentionLines={[6]}
-/>
+---
 
 export const config = {
   unstable_runtimeJS: false,
@@ -352,7 +367,7 @@ export const config = {
 export default ({ children }) => (
   <Layout
     meta={{
-      title: "Unwrapping values with the question mark operator in Rust",
+      title: "Unwrap a value with the question mark operator in Rust",
     }}
   >
     {children}

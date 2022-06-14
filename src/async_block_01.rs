@@ -1,4 +1,5 @@
 use std::fs::read_to_string;
+use futures::executor::block_on;
 use futures::TryStreamExt;
 
 pub fn main() -> Result<usize, std::io::Error> {
@@ -30,10 +31,7 @@ pub fn main3() -> Result<usize, std::io::Error> {
     paths.iter()
         .map(|p| std::fs::read_to_string(p))
         .try_fold(0, |acc, item| {
-            match item {
-                Ok(string) => Ok(acc + string.len()),
-                Err(e) => Err(e)
-            }
+            item.map(|string| acc + string.len())
         })
 }
 
@@ -101,6 +99,23 @@ pub fn measure_cargo_toml_07() -> Result<usize, std::io::Error> {
         Ok(toml) => Ok(toml.len()),
         Err(err) => Err(err)
     }
+}
+
+fn measure_cargo_toml_08() -> Result<usize, std::io::Error> {
+    let toml_len = {
+        let toml = std::fs::read_to_string("Cargo.toml")?;
+        toml.len()
+    };
+    Ok(toml_len)
+}
+
+fn measure_cargo_toml_09() {
+    block_on(async {
+        let toml_len = async {
+            let toml = std::fs::read_to_string("Cargo.toml")?;
+            toml.len()
+        };
+    })
 }
 
 pub fn measure_cargo_files() -> Result<usize, std::io::Error> {
