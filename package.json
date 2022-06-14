@@ -51,5 +51,8 @@
     "highlight.js": "^11.5.1",
     "postcss": "^8.2.12",
     "tailwindcss": "^2.1.2"
+  },
+  "engines": {
+    "node": "16"
   }
 }
